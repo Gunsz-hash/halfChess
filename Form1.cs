@@ -13,6 +13,7 @@ namespace FinalProject
         private Point blackKingPosition;
         private Point? selectedPiece = null;
         private Timer moveTimer;
+        //test
         private ComboBox intervalComboBox {  get; set; }    
 
         public Form1()
