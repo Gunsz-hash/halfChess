@@ -6,6 +6,10 @@ namespace FinalProject
 {
     public partial class Form1 : Form
     {
+        private int x, y;
+        private Bitmap bitmap;
+        private Timer flashTimer;
+        private bool flashRed =false;
         private Button[,] boardButtons = new Button[8, 4];
         private string[,] board = new string[8, 4];
         private bool isWhiteTurn = true;  // Track the turn (White starts first)
@@ -14,7 +18,10 @@ namespace FinalProject
         private Point? selectedPiece = null;
         private Timer moveTimer;
         //itamar branch
+       
         private ComboBox intervalComboBox {  get; set; }    
+
+
 
         public Form1()
         {
@@ -25,23 +32,33 @@ namespace FinalProject
             // Adjust the form size to make it bigger and provide space for the ComboBox
             this.ClientSize = new Size(5 * 120, 8 * 120 + 100); // Increase form height by 100 for ComboBox area
 
-            // Initialize ComboBox for interval selection and move it away from the board
-            intervalComboBox = new ComboBox();  // Initialize the ComboBox
-            intervalComboBox.Items.AddRange(new object[] { 20, 30 }); // Add interval choices
-            intervalComboBox.SelectedItem = 20; // Default value
-            intervalComboBox.Location = new Point(10, 350); // Move ComboBox further down (adjust as needed)
+            // Initialize ComboBox for interval selection
+            intervalComboBox = new ComboBox();
+
+            // Update interval choices to 20, 60, 90
+            intervalComboBox.Items.AddRange(new object[] { 20, 60, 90 });
+            intervalComboBox.SelectedItem = 20; // Set default to 20
+            intervalComboBox.Location = new Point(10, 350); // Adjust location as needed
             intervalComboBox.SelectedIndexChanged += IntervalComboBox_SelectedIndexChanged;
             Controls.Add(intervalComboBox);
 
-            // Initialize timer for move delays (or use for other timed events)
+            // Initialize timer for move delays
             moveTimer = new Timer();
-            moveTimer.Interval = 1000; // 1-second interval (for example)
+            moveTimer.Interval = 2000; // Default interval (20 seconds, set by default ComboBox value)
             moveTimer.Tick += MoveTimer_Tick;
         }
+       
+        private Rectangle r = new Rectangle(30,30,200,200);
+        
+        
+          
+        
+       
+
+
         private void IntervalComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int selectedInterval = (int)intervalComboBox.SelectedItem; // No need for "Form1." prefix
-            moveTimer.Interval = selectedInterval * 100;// Multiply by 100 to adjust the unit of time
+
         }
         private void InitializeBoard()
         {
@@ -170,77 +187,56 @@ namespace FinalProject
         }
         private bool IsKingCheckmated(bool isWhiteKing)
         {
-            // Get the current position of the king
+            // Check if the king itself has no legal moves
             Point kingPosition = isWhiteKing ? whiteKingPosition : blackKingPosition;
-            int kingRow = kingPosition.X;
-            int kingCol = kingPosition.Y;
-
-            // List all possible moves for the king (adjacent squares)
-            int[] directions = { -1, 0, 1 };
-            foreach (int rowDir in directions)
+            if (HasSafeKingMoves(kingPosition, isWhiteKing))
             {
-                foreach (int colDir in directions)
+                return false; // King has at least one move to avoid check
+            }
+
+            // Check if any other piece can block or capture the threatening piece
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
                 {
-                    // Skip the current square (no movement)
-                    if (rowDir == 0 && colDir == 0)
-                        continue;
-
-                    int newRow = kingRow + rowDir;
-                    int newCol = kingCol + colDir;
-
-                    // Check if the new position is within the board limits
-                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8)
+                    if (board[row, col] != null && IsPieceColorCorrect(row, col, isWhiteKing))
                     {
-                        string originalPiece = board[newRow, newCol];
+                        Point startPosition = new Point(row, col);
 
-                        // Move the king to this new position temporarily
-                        board[kingRow, kingCol] = null;
-                        board[newRow, newCol] = isWhiteKing ? "♔" : "♚";
-
-                        // Update the king's temporary position
-                        Point tempKingPosition = new Point(newRow, newCol);
-                        if (isWhiteKing)
-                            whiteKingPosition = tempKingPosition;
-                        else
-                            blackKingPosition = tempKingPosition;
-
-                        // Check if this move leaves the king in check
-                        string checkingPiece = isWhiteKing ? IsKingInCheck(true) : IsKingInCheck(false);
-                        bool isSafeMove = checkingPiece == null;
-
-                        // Revert the temporary move
-                        board[kingRow, kingCol] = isWhiteKing ? "♔" : "♚";
-                        board[newRow, newCol] = originalPiece;
-                        if (isWhiteKing)
-                            whiteKingPosition = kingPosition;
-                        else
-                            blackKingPosition = kingPosition;
-
-                        // If there's at least one safe move, king is not in checkmate
-                        if (isSafeMove)
+                        // Try moving this piece to every other position on the board
+                        for (int targetRow = 0; targetRow < 8; targetRow++)
                         {
-                            return false;
+                            for (int targetCol = 0; targetCol < 4; targetCol++)
+                            {
+                                if (IsValidMove(row, col, targetRow, targetCol))
+                                {
+                                    // Temporarily make the move
+                                    string tempEndPiece = board[targetRow, targetCol];
+                                    board[targetRow, targetCol] = board[row, col];
+                                    board[row, col] = null;
+
+                                    bool kingInCheckAfterMove = IsKingInCheck(isWhiteKing) != null;
+
+                                    // Revert the move
+                                    board[row, col] = board[targetRow, targetCol];
+                                    board[targetRow, targetCol] = tempEndPiece;
+
+                                    // If this move stops the king from being in check, it’s not checkmate
+                                    if (!kingInCheckAfterMove)
+                                    {
+                                        return false;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            // If no moves can escape check, the king is checkmated
+            // No valid moves to avoid check - king is checkmated
             return true;
         }
 
-        private void CheckForCheckmate()
-        {
-            // Check if the current player's king is checkmated
-            bool isCheckmated = IsKingCheckmated(!isWhiteTurn); // Check the opponent's king
-            if (isCheckmated)
-            {
-                // Stop the game and declare the winner
-                string winner = isWhiteTurn ? "White" : "Black";
-                MessageBox.Show($"{winner} wins! The opponent's king is checkmated.");
-                Application.Exit(); // Or reset the board for a new game, if desired
-            }
-        }
 
         private void CanPreformMove(int startRow, int startCol, int endRow, int endCol, bool capture)
         {
@@ -287,6 +283,7 @@ namespace FinalProject
                 if (originalPiece == "♔") whiteKingPosition = new Point(selectedRow, selectedCol);
                 else if (originalPiece == "♚") blackKingPosition = new Point(selectedRow, selectedCol);
 
+
                 MessageBox.Show("Invalid move! You cannot leave your king in check.");
             }
             else
@@ -314,7 +311,42 @@ namespace FinalProject
             ResetBoardColors();
             UpdateBoard();
         }
+        private bool HasSafeKingMoves(Point kingPosition, bool isWhiteKing)
+        {
+            int[] directions = { -1, 0, 1 };
+            foreach (int rowDir in directions)
+            {
+                foreach (int colDir in directions)
+                {
+                    if (rowDir == 0 && colDir == 0)
+                        continue;
 
+                    int newRow = kingPosition.X + rowDir;
+                    int newCol = kingPosition.Y + colDir;
+
+                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 4)
+                    {
+                        string originalPiece = board[newRow, newCol];
+
+                        // Temporarily move king
+                        board[kingPosition.X, kingPosition.Y] = null;
+                        board[newRow, newCol] = isWhiteKing ? "♔" : "♚";
+
+                        bool isSafe = IsKingInCheck(isWhiteKing) == null;
+
+                        // Revert king position
+                        board[kingPosition.X, kingPosition.Y] = isWhiteKing ? "♔" : "♚";
+                        board[newRow, newCol] = originalPiece;
+
+                        if (isSafe)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
         private bool IsPieceWhite(int row, int col)
         {
@@ -432,7 +464,20 @@ namespace FinalProject
             }
             return true;
         }
+        private void CheckForCheckmate()
+        {
+            // Check if the current player's king is in checkmate
+            bool isKingInCheck = IsKingInCheck(isWhiteTurn) != null;
+            bool isCheckmated = isKingInCheck && IsKingCheckmated(isWhiteTurn);
 
+            if (isCheckmated)
+            {
+                // Stop the game and declare the winner
+                string winner = isWhiteTurn ? "Black" : "White";
+                MessageBox.Show($"{winner} wins! The opponent's king is checkmated.");
+                Application.Exit(); // Or reset the board for a new game, if desired
+            }
+        }
 
         private string IsKingInCheck(bool checkWhiteKing)
         {
@@ -502,7 +547,44 @@ namespace FinalProject
             }
         }
 
- 
-        
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //this.DoubleBuffered = true;
+            bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+
+        }
+
+
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            const int SIZE = 5;
+            Graphics g = Graphics.FromImage(bitmap);
+            g.FillEllipse(Brushes.AliceBlue, x, y, SIZE, SIZE);
+            e.Graphics.DrawImage(bitmap, x, y);
+
+            g.Dispose();
+        }
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                x = e.X;
+                y = e.Y;
+                this.Invalidate();  // Trigger a repaint
+            }
+        }
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                x = e.X;
+                y = e.Y;
+                this.Invalidate();
+                //this.Update();
+            }
+
+           
+
+        }
     }
 }
