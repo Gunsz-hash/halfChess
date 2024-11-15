@@ -43,7 +43,7 @@ namespace FinalProject
 
                     else
                     {
-                        return CheckDirectionRow(startPoint, endPoint); ;
+                        return CheckUpOrDown(startPoint, endPoint); ;
                     }
 
                 }
@@ -56,7 +56,7 @@ namespace FinalProject
 
                     else
                     {
-                        return CheckDirectionRow(startPoint, endPoint); ;
+                        return CheckUpOrDown(startPoint, endPoint); ;
                     }
                 }
 
@@ -65,7 +65,7 @@ namespace FinalProject
 
             else if (rowDiffernce == 1 && colDiffernce == 0) //regular forward move
             {
-                return CheckDirectionRow(startPoint, endPoint);
+                return CheckUpOrDown(startPoint, endPoint);
             }
 
             // horizontal moves
@@ -79,7 +79,7 @@ namespace FinalProject
 
             else if(rowDiffernce == 1 && colDiffernce == 1)
             {
-                return CheckDirectionRow(startPoint,endPoint);
+                return CheckUpOrDown(startPoint,endPoint);
             }
             else
             {
@@ -88,7 +88,7 @@ namespace FinalProject
 
         }
 
-        public bool CheckDirectionRow(Position start, Position end)
+        public bool CheckUpOrDown(Position start, Position end)
         {
             if (this.Color == PieceColor.Black)
             {
