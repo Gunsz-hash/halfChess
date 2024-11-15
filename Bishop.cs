@@ -10,11 +10,11 @@ namespace FinalProject
     {
 
 
-        public Bishop(PieceColor color, Position position) : base(color, PieceType.Bishop, position) { }
+        public Bishop(PieceColor color, Square position) : base(color, PieceType.Bishop, position) { }
 
 
 
-        public override bool IsValidMove(Position startPoint, Position endPoint, Board board)
+        public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
             int rowDiffernce = Math.Abs(endPoint.Row - startPoint.Row);
             int colDiffernce = Math.Abs(endPoint.Col - startPoint.Col);

@@ -14,9 +14,9 @@ namespace FinalProject
     {
         public PieceColor Color { get; set; }
         public PieceType Type { get; private set;}
-        public Position Position { get; private set;}
+        public Square Position { get; private set;}
 
-        protected Piece(PieceColor color, PieceType type, Position position)
+        protected Piece(PieceColor color, PieceType type, Square position)
         {
             Color = color;
             Type = type;
@@ -27,14 +27,14 @@ namespace FinalProject
 
 
 
-        public abstract bool IsValidMove(Position startPoint, Position endPoint, Board board);
+        public abstract bool IsValidMove(Square startPoint, Square endPoint, Board board);
 
         public bool IsWhite()
         {
             return Color == PieceColor.White;
         }
 
-        public void SetPosition(Position newPosition)
+        public void SetPosition(Square newPosition)
         {
             //if(!newPosition.InBounds) todo fix inbound - if not, throw 
             

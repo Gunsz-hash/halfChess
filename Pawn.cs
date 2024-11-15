@@ -10,9 +10,9 @@ namespace FinalProject
     {
 
 
-        public Pawn(PieceColor color, Position position) : base(color, PieceType.Pawn, position) { }
+        public Pawn(PieceColor color, Square position) : base(color, PieceType.Pawn, position) { }
 
-        public override bool IsValidMove(Position startPoint, Position endPoint, Board board)
+        public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
 
             int rowDiffernce = Math.Abs(endPoint.Row - startPoint.Row);
@@ -88,7 +88,7 @@ namespace FinalProject
 
         }
 
-        public bool CheckUpOrDown(Position start, Position end)
+        public bool CheckUpOrDown(Square start, Square end)
         {
             if (this.Color == PieceColor.Black)
             {

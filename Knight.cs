@@ -9,11 +9,11 @@ namespace FinalProject
 {
     internal class Knight : Piece
     {
-        public Knight(PieceColor color, Position position) : base(color, PieceType.Knight, position) { }
+        public Knight(PieceColor color, Square position) : base(color, PieceType.Knight, position) { }
 
 
 
-        public override bool IsValidMove(Position startPoint, Position endPoint, Board board)
+        public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
             int rowDiffernce = Math.Abs(endPoint.Row - startPoint.Row);
             int colDiffernce = Math.Abs(endPoint.Col - startPoint.Col);

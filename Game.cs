@@ -8,16 +8,13 @@ namespace FinalProject
 {
     internal class Game
     {
-
-        public const int Rows = 8;
-        public const int Columns = 4;
-
+            
         private Board board;
         private bool isWhiteTurn;
 
         public Game()
         {
-            board = new Board(Rows, Columns);
+            board = new Board();
             isWhiteTurn = true;
         }
 
