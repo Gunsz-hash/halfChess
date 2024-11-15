@@ -1,20 +1,55 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Drawing;
 using System.Windows.Forms;
 
 namespace FinalProject
 {
+    
+ 
     public partial class Form1 : Form
     {
+        /*private int x, y;
+        private Bitmap bitmap;
+        private Timer flashTimer;
+        private bool flashRed = false;*/
         private Button[,] boardButtons = new Button[8, 4];
-        private string[,] board = new string[8, 4];
-        private bool isWhiteTurn = true;  // Track the turn (White starts first)
+        //private string[,] board = new string[8, 4];
+        //private bool isWhiteTurn = true;  // Track the turn (White starts first)
         private Point whiteKingPosition;
         private Point blackKingPosition;
         private Point? selectedPiece = null;
         private Timer moveTimer;
-        //ch1
-        private ComboBox intervalComboBox {  get; set; }    
+        //itamar branch
+
+        private ComboBox intervalComboBox { get; set; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         public Form1()
         {
@@ -25,23 +60,29 @@ namespace FinalProject
             // Adjust the form size to make it bigger and provide space for the ComboBox
             this.ClientSize = new Size(5 * 120, 8 * 120 + 100); // Increase form height by 100 for ComboBox area
 
-            // Initialize ComboBox for interval selection and move it away from the board
-            intervalComboBox = new ComboBox();  // Initialize the ComboBox
-            intervalComboBox.Items.AddRange(new object[] { 20, 30 }); // Add interval choices
-            intervalComboBox.SelectedItem = 20; // Default value
-            intervalComboBox.Location = new Point(10, 350); // Move ComboBox further down (adjust as needed)
+            // Initialize ComboBox for interval selection
+            intervalComboBox = new ComboBox();
+
+            // Update interval choices to 20, 60, 90
+            intervalComboBox.Items.AddRange(new object[] { 20, 60, 90 });
+            intervalComboBox.SelectedItem = 20; // Set default to 20
+            intervalComboBox.Location = new Point(10, 350); // Adjust location as needed
             intervalComboBox.SelectedIndexChanged += IntervalComboBox_SelectedIndexChanged;
             Controls.Add(intervalComboBox);
 
-            // Initialize timer for move delays (or use for other timed events)
+            // Initialize timer for move delays
             moveTimer = new Timer();
-            moveTimer.Interval = 1000; // 1-second interval (for example)
+            moveTimer.Interval = 2000; // Default interval (20 seconds, set by default ComboBox value)
             moveTimer.Tick += MoveTimer_Tick;
         }
+
+        private Rectangle r = new Rectangle(30, 30, 200, 200);
+
+
+
         private void IntervalComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int selectedInterval = (int)intervalComboBox.SelectedItem; // No need for "Form1." prefix
-            moveTimer.Interval = selectedInterval * 100;// Multiply by 100 to adjust the unit of time
+
         }
         private void InitializeBoard()
         {
@@ -168,162 +209,268 @@ namespace FinalProject
                 }
             }
         }
+
+        private void CheckValidator(bool isWhiteTurn)
+        {
+
+        }
+
+        private string IsKingInCheck(bool checkWhiteKing)
+        {
+            Point kingPosition = checkWhiteKing ? whiteKingPosition : blackKingPosition;
+            string checkingPiece = null;
+
+
+            //
+
+            // Loop through all board positions to find pieces of the opposite color
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    /*if (board[row, col] != null && IsPieceColorCorrect(row, col, !checkWhiteKing)) // Check opposite color
+                    {
+                        string piece = board[row, col];
+
+                        // Check if this piece can attack the king's position
+                        if ((piece == "♖" || piece == "♜") && (row == kingPosition.X || col == kingPosition.Y))
+                        {
+                            if (IsPathClear(kingPosition, new Point(row, col)))
+                            {
+                                checkingPiece = piece;
+                                //CheckForCheckmate();
+
+                                return checkingPiece;
+                            }
+                        }
+                        if ((piece == "♗" || piece == "♝") && Math.Abs(row - kingPosition.X) == Math.Abs(col - kingPosition.Y))
+                        {
+                            if (IsPathClear(kingPosition, new Point(row, col)))
+                            {
+                                checkingPiece = piece;
+                                //CheckForCheckmate();
+
+                                return checkingPiece;
+                            }
+                        }
+                        if ((piece == "♘" || piece == "♞") && IsKnightAttack(kingPosition, new Point(row, col)))
+                        {
+                            checkingPiece = piece;
+                            //CheckForCheckmate();
+                            return checkingPiece;
+                        }*/
+                    }
+                }
+            }
+            return checkingPiece;
+        }
+
         private bool IsKingCheckmated(bool isWhiteKing)
         {
-            // Get the current position of the king
+            // Check if the king itself has no legal moves
             Point kingPosition = isWhiteKing ? whiteKingPosition : blackKingPosition;
-            int kingRow = kingPosition.X;
-            int kingCol = kingPosition.Y;
-
-            // List all possible moves for the king (adjacent squares)
-            int[] directions = { -1, 0, 1 };
-            foreach (int rowDir in directions)
+            if (HasSafeKingMoves(kingPosition, isWhiteKing))
             {
-                foreach (int colDir in directions)
+                return false; // King has at least one move to avoid check
+            }
+
+            // Check if any other piece can block or capture the threatening piece
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
                 {
-                    // Skip the current square (no movement)
-                    if (rowDir == 0 && colDir == 0)
-                        continue;
-
-                    int newRow = kingRow + rowDir;
-                    int newCol = kingCol + colDir;
-
-                    // Check if the new position is within the board limits
-                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8)
+                    if (board[row, col] != null && IsPieceColorCorrect(row, col, isWhiteKing))
                     {
-                        string originalPiece = board[newRow, newCol];
+                        Point startPosition = new Point(row, col);
 
-                        // Move the king to this new position temporarily
-                        board[kingRow, kingCol] = null;
-                        board[newRow, newCol] = isWhiteKing ? "♔" : "♚";
-
-                        // Update the king's temporary position
-                        Point tempKingPosition = new Point(newRow, newCol);
-                        if (isWhiteKing)
-                            whiteKingPosition = tempKingPosition;
-                        else
-                            blackKingPosition = tempKingPosition;
-
-                        // Check if this move leaves the king in check
-                        string checkingPiece = isWhiteKing ? IsKingInCheck(true) : IsKingInCheck(false);
-                        bool isSafeMove = checkingPiece == null;
-
-                        // Revert the temporary move
-                        board[kingRow, kingCol] = isWhiteKing ? "♔" : "♚";
-                        board[newRow, newCol] = originalPiece;
-                        if (isWhiteKing)
-                            whiteKingPosition = kingPosition;
-                        else
-                            blackKingPosition = kingPosition;
-
-                        // If there's at least one safe move, king is not in checkmate
-                        if (isSafeMove)
+                        // Try moving this piece to every other position on the board
+                        for (int targetRow = 0; targetRow < 8; targetRow++)
                         {
-                            return false;
+                            for (int targetCol = 0; targetCol < 4; targetCol++)
+                            {
+                                if (IsValidMove(row, col, targetRow, targetCol))
+                                {
+                                    // Temporarily make the move
+                                    string tempEndPiece = board[targetRow, targetCol];
+                                    board[targetRow, targetCol] = board[row, col];
+                                    board[row, col] = null;
+
+                                    bool kingInCheckAfterMove = IsKingInCheck(isWhiteKing) != null;
+
+                                    // Revert the move
+                                    board[row, col] = board[targetRow, targetCol];
+                                    board[targetRow, targetCol] = tempEndPiece;
+
+                                    // If this move stops the king from being in check, it’s not checkmate
+                                    if (!kingInCheckAfterMove)
+                                    {
+                                        return false;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            // If no moves can escape check, the king is checkmated
+            // No valid moves to avoid check - king is checkmated
             return true;
         }
 
-        private void CheckForCheckmate()
+
+        private string IsKingInCheck(bool checkWhiteKing)
         {
-            // Check if the current player's king is checkmated
-            bool isCheckmated = IsKingCheckmated(!isWhiteTurn); // Check the opponent's king
-            if (isCheckmated)
+            Point kingPosition = checkWhiteKing ? whiteKingPosition : blackKingPosition;
+            string checkingPiece = null;
+
+            // Loop through all board positions to find pieces of the opposite color
+            for (int row = 0; row < 8; row++)
             {
-                // Stop the game and declare the winner
-                string winner = isWhiteTurn ? "White" : "Black";
-                MessageBox.Show($"{winner} wins! The opponent's king is checkmated.");
-                Application.Exit(); // Or reset the board for a new game, if desired
+                for (int col = 0; col < 4; col++)
+                {
+                    if (board[row, col] != null && IsPieceColorCorrect(row, col, !checkWhiteKing)) // Check opposite color
+                    {
+                        string piece = board[row, col];
+
+                        // Check if this piece can attack the king's position
+                        if ((piece == "♖" || piece == "♜") && (row == kingPosition.X || col == kingPosition.Y))
+                        {
+                            if (IsPathClear(kingPosition, new Point(row, col)))
+                            {
+                                checkingPiece = piece;
+                                //CheckForCheckmate();
+
+                                return checkingPiece;
+                            }
+                        }
+                        if ((piece == "♗" || piece == "♝") && Math.Abs(row - kingPosition.X) == Math.Abs(col - kingPosition.Y))
+                        {
+                            if (IsPathClear(kingPosition, new Point(row, col)))
+                            {
+                                checkingPiece = piece;
+                                //CheckForCheckmate();
+
+                                return checkingPiece;
+                            }
+                        }
+                        if ((piece == "♘" || piece == "♞") && IsKnightAttack(kingPosition, new Point(row, col)))
+                        {
+                            checkingPiece = piece;
+                            //CheckForCheckmate();
+                            return checkingPiece;
+                        }
+                    }
+                }
             }
+            return checkingPiece;
         }
 
-        private void CanPreformMove(int startRow, int startCol, int endRow, int endCol, bool capture)
-        {
-            // Capture or move to the new position
-            string movingPiece = board[startRow, startCol];
-            board[endRow, endCol] = movingPiece;
-            board[startRow, startCol] = null;
-
-            // Update king position if moved
-            if (movingPiece == "♔") whiteKingPosition = new Point(endRow, endCol);
-            if (movingPiece == "♚") blackKingPosition = new Point(endRow, endCol);
-
-            // Reset selection, update turn, and refresh board UI
-            selectedPiece = null;
-            isWhiteTurn = !isWhiteTurn;
-            ResetBoardColors();
-            UpdateBoard();
-
-            // Check if the opponent's king is in checkmate after the move
-            CheckForCheckmate();
-        }
 
         private void PerformMove(int selectedRow, int selectedCol, int row, int col, bool capture)
         {
-            string originalPiece = board[selectedRow, selectedCol];
-            string tempEndPiece = board[row, col];
+            var originalPiece = board[selectedRow, selectedCol];
+            var capturedPiece = board[row, col];
+            var originalPos = new Point(selectedRow, selectedCol);
+            var newPos = new Point(row, col);
 
-            // Perform the move
+            // Make the move
             board[row, col] = originalPiece;
             board[selectedRow, selectedCol] = null;
 
-            // Update king position if a king is moved
-            if (originalPiece == "♔") whiteKingPosition = new Point(row, col);
-            else if (originalPiece == "♚") blackKingPosition = new Point(row, col);
+            // Update king position
+            if (originalPiece == "WK") whiteKingPosition = newPos;
+            else if (originalPiece == "BK") blackKingPosition = newPos;
 
-            // Check if move leaves own king in check
-            string checkingPiece = isWhiteTurn ? IsKingInCheck(true) : IsKingInCheck(false);
-            if (checkingPiece != null)
+            // Validate move doesn't leave own king in check
+            if (IsKingInCheck(isWhiteTurn) != null)
             {
-                // Revert move if it leaves the king in check
+                // Revert move
                 board[selectedRow, selectedCol] = originalPiece;
-                board[row, col] = tempEndPiece;
+                board[row, col] = capturedPiece;
 
-                if (originalPiece == "♔") whiteKingPosition = new Point(selectedRow, selectedCol);
-                else if (originalPiece == "♚") blackKingPosition = new Point(selectedRow, selectedCol);
+                if (originalPiece == "WK") whiteKingPosition = originalPos;
+                else if (originalPiece == "BK") blackKingPosition = originalPos;
 
                 MessageBox.Show("Invalid move! You cannot leave your king in check.");
+                return;
             }
-            else
+
+            // Move is valid, switch turns
+            isWhiteTurn = !isWhiteTurn;
+
+            // Handle capture notification
+            if (capture && capturedPiece != null)
             {
-                // Move successful, switch turns and notify of capture
-                isWhiteTurn = !isWhiteTurn;
-
-                // Display capture message if necessary
-                if (capture && tempEndPiece != null)
-                {
-                    MessageBox.Show($"Captured {tempEndPiece}!");
-                }
-
-                // Check if opponent’s king is in check
-                string opponentCheckingPiece = IsKingInCheck(!isWhiteTurn);
-                if (opponentCheckingPiece != null)
-                {
-                    MessageBox.Show(isWhiteTurn ? $"Black King is in check by {opponentCheckingPiece}!" : $"White King is in check by {opponentCheckingPiece}!");
-                }
-               
+                MessageBox.Show($"Captured {capturedPiece}!");
             }
 
-            // Reset selection and update board
+            // Check if opponent is now in check
+            var checkingPiece = CheckValidator(!isWhiteTurn);
+            if (checkingPiece != null)
+            {
+                var kingColor = isWhiteTurn ? "Black" : "White";
+                MessageBox.Show($"{kingColor} King is in check by {checkingPiece}!");
+            }
+
+            // Cleanup
             selectedPiece = null;
             ResetBoardColors();
             UpdateBoard();
         }
-
-
-        private bool IsPieceWhite(int row, int col)
+        private bool HasSafeKingMoves(Point kingPosition, bool isWhiteKing)
         {
-            // Check if the piece at the given position is white (White pieces: ♔, ♗, ♘, ♖, ♙)
-            return board[row, col] != null && "♔♗♘♖♙".Contains(board[row, col]);
+            int[] directions = { -1, 0, 1 };
+            foreach (int rowDir in directions)
+            {
+                foreach (int colDir in directions)
+                {
+                    if (rowDir == 0 && colDir == 0)
+                        continue;
+
+                    int newRow = kingPosition.X + rowDir;
+                    int newCol = kingPosition.Y + colDir;
+
+                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 4)
+                    {
+                        string originalPiece = board[newRow, newCol];
+
+                        // Temporarily move king
+                        board[kingPosition.X, kingPosition.Y] = null;
+                        board[newRow, newCol] = isWhiteKing ? "♔" : "♚";
+
+                        bool isSafe = IsKingInCheck(isWhiteKing) == null;
+
+                        // Revert king position
+                        board[kingPosition.X, kingPosition.Y] = isWhiteKing ? "♔" : "♚";
+                        board[newRow, newCol] = originalPiece;
+
+                        if (isSafe)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
+
+        //private bool IsPieceWhite(int row, int col)
+        //{
+        //    // Check if the piece at the given position is white (White pieces: ♔, ♗, ♘, ♖, ♙)
+        //    return board[row, col] != null && "♔♗♘♖♙".Contains(board[row, col]);
+        //}
+
+        //private bool CheckForCheckmate()
+        //{
+        //    if (
+
+
+        //}
+
 
         private bool IsValidMove(int startRow, int startCol, int endRow, int endCol)
         {
+
             string piece = board[startRow, startCol];
             bool isWhitePiece = "♔♗♘♖♙".Contains(piece); // White pieces
             bool isBlackPiece = "♚♝♞♜♟".Contains(piece); // Black pieces
@@ -340,7 +487,7 @@ namespace FinalProject
 
             switch (piece)
             {
-                case "♙": // White Pawn
+                case "WP": // White Pawn
                     if (startCol == endCol)
                     {
                         // Single square move
@@ -358,7 +505,7 @@ namespace FinalProject
 
                     break;
 
-                case "♟": // Black Pawn
+                case "BP": // Black Pawn
                     if (startCol == endCol)
                     {
                         // Single square move
@@ -376,34 +523,29 @@ namespace FinalProject
 
                     break;
 
-                case "♘": // White Knight
-                case "♞": // Black Knight
+                case "WN": // White Knight
+                case "BN": // Black Knight
                     if (Math.Abs(startRow - endRow) == 2 && Math.Abs(startCol - endCol) == 1 ||
                         Math.Abs(startRow - endRow) == 1 && Math.Abs(startCol - endCol) == 2)
                         return true;
                     break;
 
-                case "♗": // White Bishop
-                case "♝": // Black Bishop
+                case "WB": // White Bishop
+                case "BB": // Black Bishop
                     if (Math.Abs(startRow - endRow) == Math.Abs(startCol - endCol) && IsPathClear(new Point(startRow, startCol), new Point(endRow, endCol)))
                         return true;
                     break;
 
-                case "♖": // White Rook
-                case "♜": // Black Rook
+                case "WR": // White Rook
+                case "BR": // Black Rook
                     if ((startRow == endRow || startCol == endCol) && IsPathClear(new Point(startRow, startCol), new Point(endRow, endCol)))
                         return true;
                     break;
 
-                case "♕": // White Queen
-                case "♛": // Black Queen
-                    if ((Math.Abs(startRow - endRow) == Math.Abs(startCol - endCol) || startRow == endRow || startCol == endCol) &&
-                        IsPathClear(new Point(startRow, startCol), new Point(endRow, endCol)))
-                        return true;
-                    break;
 
-                case "♔": // White King
-                case "♚": // Black King
+
+                case "WK": // White King
+                case "BK": // Black King
                     if (Math.Abs(startRow - endRow) <= 1 && Math.Abs(startCol - endCol) <= 1)
                         return true;
                     break;
@@ -411,7 +553,7 @@ namespace FinalProject
 
             return false;
         }
-       
+
         private bool IsPathClear(Point start, Point end)
         {
             int rowDiff = Math.Sign(end.X - start.X);
@@ -433,6 +575,15 @@ namespace FinalProject
             return true;
         }
 
+        private void Checkmate()
+        {
+
+            // Stop the game and declare the winner
+            string winner = isWhiteTurn ? "Black" : "White";
+            MessageBox.Show($"{winner} wins! The opponent's king is checkmated.");
+            Application.Exit(); // Or reset the board for a new game, if desired
+
+        }
 
         private string IsKingInCheck(bool checkWhiteKing)
         {
@@ -449,25 +600,30 @@ namespace FinalProject
                         string piece = board[row, col];
 
                         // Check if this piece can attack the king's position
-                        if ((piece == "♖" || piece == "♜" || piece == "♕" || piece == "♛") && (row == kingPosition.X || col == kingPosition.Y))
+                        if ((piece == "♖" || piece == "♜") && (row == kingPosition.X || col == kingPosition.Y))
                         {
                             if (IsPathClear(kingPosition, new Point(row, col)))
                             {
                                 checkingPiece = piece;
+                                //CheckForCheckmate();
+
                                 return checkingPiece;
                             }
                         }
-                        if ((piece == "♗" || piece == "♝" || piece == "♕" || piece == "♛") && Math.Abs(row - kingPosition.X) == Math.Abs(col - kingPosition.Y))
+                        if ((piece == "♗" || piece == "♝") && Math.Abs(row - kingPosition.X) == Math.Abs(col - kingPosition.Y))
                         {
                             if (IsPathClear(kingPosition, new Point(row, col)))
                             {
                                 checkingPiece = piece;
+                                //CheckForCheckmate();
+
                                 return checkingPiece;
                             }
                         }
                         if ((piece == "♘" || piece == "♞") && IsKnightAttack(kingPosition, new Point(row, col)))
                         {
                             checkingPiece = piece;
+                            //CheckForCheckmate();
                             return checkingPiece;
                         }
                     }
@@ -502,7 +658,385 @@ namespace FinalProject
             }
         }
 
- 
-        
+        /*private void Form1_Load(object sender, EventArgs e)
+        {
+            //this.DoubleBuffered = true;
+            bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+
+        }*/
+
+
+       /* private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            const int SIZE = 5;
+            Graphics g = Graphics.FromImage(bitmap);
+            g.FillEllipse(Brushes.AliceBlue, x, y, SIZE, SIZE);
+            e.Graphics.DrawImage(bitmap, x, y);
+
+            g.Dispose();
+        }
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                x = e.X;
+                y = e.Y;
+                this.Invalidate();  // Trigger a repaint
+            }
+        }
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                x = e.X;
+                y = e.Y;
+                this.Invalidate();
+                //this.Update();
+            }
+
+
+
+        }*/
     }
+
+
+    
+
+    public class ChessPiece
+    {
+        public PieceType Type { get; set; }
+        public PieceColor Color { get; set; }
+        public Position Position { get; set; }
+        public bool HasMoved { get; set; }
+
+        public ChessPiece(PieceType type, PieceColor color, Position position)
+        {
+            Type = type;
+            Color = color;
+            Position = position;
+            HasMoved = false;
+        }
+    }
+
+    public class ChessBoard
+    {
+        private ChessPiece[,] board;
+        public PieceColor CurrentTurn { get; private set; }
+        public bool IsCheck { get; private set; }
+
+        public ChessBoard()
+        {
+            board = new ChessPiece[8, 4];
+            InitializeBoard();
+            CurrentTurn = PieceColor.White;
+            IsCheck = false;
+        }
+
+        private void InitializeBoard()
+        {
+            // Initialize empty board
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    board[row, col] = new ChessPiece(PieceType.Empty, PieceColor.None, new Position(row, col));
+                }
+            }
+
+            // Set up white pieces
+            SetupPieces(PieceColor.White, 7);
+            SetupPawns(PieceColor.White, 6);
+
+            // Set up black pieces
+            SetupPieces(PieceColor.Black, 0);
+            SetupPawns(PieceColor.Black, 1);
+        }
+
+        private void SetupPieces(PieceColor color, int row)
+        {
+            board[row, 0] = new ChessPiece(PieceType.Rook, color, new Position(row, 0));
+            board[row, 1] = new ChessPiece(PieceType.Knight, color, new Position(row, 1));
+            board[row, 2] = new ChessPiece(PieceType.Bishop, color, new Position(row, 2));
+            board[row, 3] = new ChessPiece(PieceType.King, color, new Position(row, 3));
+        }
+
+        private void SetupPawns(PieceColor color, int row)
+        {
+            for (int col = 0; col < 4; col++)
+            {
+                board[row, col] = new ChessPiece(PieceType.Pawn, color, new Position(row, col));
+            }
+        }
+
+        public bool MovePiece(Position from, Position to)
+        {
+            if (!from.IsValid() || !to.IsValid())
+                return false;
+
+            ChessPiece piece = board[from.Row, from.Col];
+
+            if (piece.Color != CurrentTurn)
+                return false;
+
+            if (!IsValidMove(from, to))
+                return false;
+
+            // Store the original state for check validation
+            ChessPiece capturedPiece = board[to.Row, to.Col];
+            board[to.Row, to.Col] = piece;
+            board[from.Row, from.Col] = new ChessPiece(PieceType.Empty, PieceColor.None, from);
+            piece.Position = to;
+            piece.HasMoved = true;
+
+            // Check if the move puts or leaves the current player in check
+            if (IsInCheck(CurrentTurn))
+            {
+                // Revert the move
+                board[from.Row, from.Col] = piece;
+                board[to.Row, to.Col] = capturedPiece;
+                piece.Position = from;
+                return false;
+            }
+
+            // Update check status for opponent
+            IsCheck = IsInCheck(CurrentTurn == PieceColor.White ? PieceColor.Black : PieceColor.White);
+
+            // Switch turns
+            CurrentTurn = CurrentTurn == PieceColor.White ? PieceColor.Black : PieceColor.White;
+
+            return true;
+        }
+
+        public bool IsValidMove(Position from, Position to)
+        {
+            ChessPiece piece = board[from.Row, from.Col];
+
+            // Check if destination has friendly piece
+            if (board[to.Row, to.Col].Color == piece.Color)
+                return false;
+
+            // Special case for horizontal pawn movement (new rule)
+            if (piece.Type == PieceType.Pawn && from.Row == to.Row &&
+                Math.Abs(from.Col - to.Col) == 1 && board[to.Row, to.Col].Type == PieceType.Empty)
+            {
+                return true;
+            }
+
+            switch (piece.Type)
+            {
+                case PieceType.King:
+                    return IsValidKingMove(from, to);
+                case PieceType.Rook:
+                    return IsValidRookMove(from, to);
+                case PieceType.Bishop:
+                    return IsValidBishopMove(from, to);
+                case PieceType.Knight:
+                    return IsValidKnightMove(from, to);
+                case PieceType.Pawn:
+                    return IsValidPawnMove(from, to);
+                default:
+                    return false;
+            }
+        }
+
+        private bool IsValidKingMove(Position from, Position to)
+        {
+            int rowDiff = Math.Abs(to.Row - from.Row);
+            int colDiff = Math.Abs(to.Col - from.Col);
+            return rowDiff <= 1 && colDiff <= 1;
+        }
+
+        private bool IsValidRookMove(Position from, Position to)
+        {
+            if (from.Row != to.Row && from.Col != to.Col)
+                return false;
+
+            return !IsPathBlocked(from, to);
+        }
+
+        private bool IsValidBishopMove(Position from, Position to)
+        {
+            if (Math.Abs(to.Row - from.Row) != Math.Abs(to.Col - from.Col))
+                return false;
+
+            return !IsPathBlocked(from, to);
+        }
+
+        private bool IsValidKnightMove(Position from, Position to)
+        {
+            int rowDiff = Math.Abs(to.Row - from.Row);
+            int colDiff = Math.Abs(to.Col - from.Col);
+            return (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
+        }
+
+        private bool IsValidPawnMove(Position from, Position to)
+        {
+            int direction = (board[from.Row, from.Col].Color == PieceColor.White) ? -1 : 1;
+            int rowDiff = to.Row - from.Row;
+            int colDiff = Math.Abs(to.Col - from.Col);
+
+            // Regular move
+            if (colDiff == 0 && rowDiff == direction && board[to.Row, to.Col].Type == PieceType.Empty)
+                return true;
+
+            // First move - can move two squares
+            if (!board[from.Row, from.Col].HasMoved && colDiff == 0 && rowDiff == 2 * direction &&
+                board[to.Row, to.Col].Type == PieceType.Empty &&
+                board[from.Row + direction, from.Col].Type == PieceType.Empty)
+                return true;
+
+            // Capture
+            if (colDiff == 1 && rowDiff == direction && board[to.Row, to.Col].Color != board[from.Row, from.Col].Color &&
+                board[to.Row, to.Col].Type != PieceType.Empty)
+                return true;
+
+            return false;
+        }
+
+        private bool IsPathBlocked(Position from, Position to)
+        {
+            int rowStep = Math.Sign(to.Row - from.Row);
+            int colStep = Math.Sign(to.Col - from.Col);
+
+            int currentRow = from.Row + rowStep;
+            int currentCol = from.Col + colStep;
+
+            while (currentRow != to.Row || currentCol != to.Col)
+            {
+                if (board[currentRow, currentCol].Type != PieceType.Empty)
+                    return true;
+
+                currentRow += rowStep;
+                currentCol += colStep;
+            }
+
+            return false;
+        }
+
+        public bool IsInCheck(PieceColor color)
+        {
+            // Find king position
+            Position kingPos = FindKing(color);
+
+            // Check if any opponent piece can capture the king
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    if (board[row, col].Color != color && board[row, col].Type != PieceType.Empty)
+                    {
+                        if (IsValidMove(new Position(row, col), kingPos))
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private Position FindKing(PieceColor color) //todo: use another search
+        {
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    if (board[row, col].Type == PieceType.King && board[row, col].Color == color)
+                        return new Position(row, col);
+                }
+            }
+            throw new Exception("King not found - invalid board state");
+        }
+
+        public bool IsCheckmate()
+        {
+            if (!IsCheck)
+                return false;
+
+            // Try all possible moves for current player
+            for (int fromRow = 0; fromRow < 8; fromRow++)
+            {
+                for (int fromCol = 0; fromCol < 4; fromCol++)
+                {
+                    if (board[fromRow, fromCol].Color == CurrentTurn)
+                    {
+                        for (int toRow = 0; toRow < 8; toRow++)
+                        {
+                            for (int toCol = 0; toCol < 4; toCol++)
+                            {
+                                Position from = new Position(fromRow, fromCol);
+                                Position to = new Position(toRow, toCol);
+
+                                if (IsValidMove(from, to))
+                                {
+                                    // Try the move
+                                    ChessPiece capturedPiece = board[to.Row, to.Col];
+                                    ChessPiece movingPiece = board[from.Row, from.Col];
+
+                                    board[to.Row, to.Col] = movingPiece;
+                                    board[from.Row, from.Col] = new ChessPiece(PieceType.Empty, PieceColor.None, from);
+                                    movingPiece.Position = to;
+
+                                    bool stillInCheck = IsInCheck(CurrentTurn);
+
+                                    // Undo the move
+                                    board[from.Row, from.Col] = movingPiece;
+                                    board[to.Row, to.Col] = capturedPiece;
+                                    movingPiece.Position = from;
+
+                                    if (!stillInCheck)
+                                        return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public ChessPiece GetPiece(Position pos)
+        {
+            if (!pos.IsValid())
+                throw new ArgumentException("Invalid position");
+            return board[pos.Row, pos.Col];
+        }
+
+        public List<Position> GetValidMoves(Position from)
+        {
+            List<Position> validMoves = new List<Position>();
+
+            if (!from.IsValid() || board[from.Row, from.Col].Color != CurrentTurn)
+                return validMoves;
+
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 4; col++)
+                {
+                    Position to = new Position(row, col);
+                    if (IsValidMove(from, to))
+                    {
+                        // Test if move would put or leave player in check
+                        ChessPiece capturedPiece = board[to.Row, to.Col];
+                        ChessPiece movingPiece = board[from.Row, from.Col];
+
+                        board[to.Row, to.Col] = movingPiece;
+                        board[from.Row, from.Col] = new ChessPiece(PieceType.Empty, PieceColor.None, from);
+                        movingPiece.Position = to;
+
+                        if (!IsInCheck(CurrentTurn))
+                            validMoves.Add(to);
+
+                        // Undo the move
+                        board[from.Row, from.Col] = movingPiece;
+                        board[to.Row, to.Col] = capturedPiece;
+                        movingPiece.Position = from;
+                    }
+                }
+            }
+
+            return validMoves;
+        }
+    }
+
 }
