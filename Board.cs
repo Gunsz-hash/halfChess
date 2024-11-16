@@ -60,6 +60,11 @@ namespace FinalProject
             return position.Row >= 0 && position.Row < Rows && position.Col >= 0 && position.Col < Columns;
         }
 
+        public bool InBounds(int Row, int Col)
+        {
+            return Row >= 0 && Row < Rows && Col >= 0 && Col < Columns;
+        }
+
         public void SetPiece(Square position, Piece piece)
         {
             if(InBounds(position))

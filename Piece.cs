@@ -12,8 +12,8 @@ namespace FinalProject
 
     internal abstract class Piece
     {
-        public PieceColor Color { get; private set; }
-        public PieceType Type { get; private set;}
+        public PieceColor Color { get;  set; }
+        public PieceType Type { get;  set;}
         public Square Position { get; private set;}
 
         protected Piece(PieceColor color, PieceType type, Square position)

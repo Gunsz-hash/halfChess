@@ -90,7 +90,7 @@ namespace FinalProject
 
         public bool CheckUpOrDown(Square start, Square end)
         {
-            if (this.Color == PieceColor.Black)
+            if (this.Color == PieceColor.Black) // down
             {
                 if (end.Row > start.Row)
                 {
@@ -104,7 +104,7 @@ namespace FinalProject
 
             else
             {
-                if (end.Row < start.Row)
+                if (end.Row < start.Row) //up
                 {
                     return true;
                 }

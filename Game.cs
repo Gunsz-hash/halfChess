@@ -29,7 +29,7 @@ namespace FinalProject
 
 
 
-        public bool HandleSquareClick(Square position, Button clickedButton)
+        public void HandleSquareClick(Square position, Button clickedButton)
         {
             if (selectedPiece.IsEmpty || clickedFirst == false)//first time clicking on a piece
             {
@@ -46,10 +46,12 @@ namespace FinalProject
                 }
                 
             }
+            
             else
             {
                 if(Check2ndPressValidity(selectedPiece.Position, position))//if this function was true, click 2 was made
                 {
+                    //next turn? switch turn
                     clickedFirst = false;
                 }
                 else
@@ -91,7 +93,7 @@ namespace FinalProject
 
         }
 
-        public bool Check2ndPressValidity(Square start, Square end)
+        public bool Check2ndPressValidity(Square start, Square end, Button clickedButton)
         {
 
             Piece mainPiece = board.GetPiece(start);
@@ -109,6 +111,7 @@ namespace FinalProject
                             if (CanAvoidCheck(start, end))
                             {
                                 Move(start, end);
+                                ResetBoardColors();
                                 return true;
                             }
                             else
@@ -121,23 +124,23 @@ namespace FinalProject
                         else
                         {
                             Move(start, end);
+                            ResetBoardColors();
                             return true;
                         }
                     }
-                    else //do nothing, print a message, 
+                    else //do nothing.
                     {
-                        //ignore
+                        return false;
                     }
-                    //logic for testing and then moving
                 }
 
-
-                //if this function is the 2nd press, 
                 else if (targetSquare.Color == mainPiece.Color) // if its a friendly piece
                 {
-                    //ignore
-                    //change context of the first click.
-                    //exit this function and change the clicked soldier to be it.
+                    selectedPiece = board.GetPiece(end);
+                    ResetBoardColors();
+                    clickedButton.BackColor = Color.Yellow;// highlight player   
+                    return false;
+
                 }
 
 
@@ -145,6 +148,32 @@ namespace FinalProject
                 {
                     if (mainPiece.IsValidMove(start, end, board)) //if this square can be accessed 
                     {
+
+                        if (IsInCheck(mainPiece))
+                        {
+                            if (CanAvoidCheckByCapture(start, end))
+                            {
+                                Capture(start, end);
+                                ResetBoardColors();
+                                return true;
+                            }
+                            else
+                            {
+                                //if (!ischeckmate)
+                                MessageBox.Show("Invalid move! You cannot leave your king in check.");
+                                return false;
+                            }
+
+                        }
+                        else
+                        {
+                            Capture(start, end);
+                            ResetBoardColors();
+                            return true;
+                        }
+
+
+
                         //check if im in check and if i am, check if the next move blocks the check, if not - cant do
                         //capture
                     }
@@ -181,7 +210,80 @@ namespace FinalProject
 
             return avoided;
         }
-        
+
+        public bool CanOtherPieceDefend(King king)
+        {
+
+        }
+
+        public bool CanAvoidCheckmate(King king)
+        {
+            int[] rowOffsets = { -1, -1, -1, 0, 0, 1, 1, 1 };
+            int[] colOffsets = { -1, 0, 1, -1, 1, -1, 0, 1 };
+
+            for (int i = 0; i < 8; i++)
+            {
+                int newRow = king.Position.Row + rowOffsets[i];
+                int newCol = king.Position.Col + colOffsets[i];
+                Square newPosition = new Square(newRow, newCol);
+
+                bool isFriendly = board.GetPiece(newPosition).Color == king.Color;
+
+                if (board.InBounds(newPosition) && !isFriendly)
+                {
+                    if (CanAvoidCheck(king.Position, newPosition) || CanAvoidCheckByCapture(king.Position, newPosition))
+                    {
+                        return true;
+                    }
+                }
+
+            }
+
+            return false; // No legal moves for the king
+        }
+
+
+        public void Capture(Square start, Square end)
+        {
+            Piece captured = board.GetPiece(end);
+            Move(start, end);
+            captured.Color = PieceColor.None;
+            captured.SetPosition(null);
+            captured.Type = PieceType.Empty;
+        }
+
+        public bool CanAvoidCheckByCapture(Square start, Square end)
+        {
+            Piece capturedOriginal = board.GetPiece(end);
+            Piece captured = board.GetPiece(end);
+
+            Piece OriginalStartPiece = board.GetPiece(start);
+            Piece OriginalEndPiece = board.GetPiece(end);
+
+
+            //DO THE MOVE
+            board.SetPiece(end, OriginalStartPiece);
+            board.SetPiece(start, new EmptyPiece(null)); //isnt that the function move?
+            captured.Color = PieceColor.None;
+            captured.SetPosition(null);
+            captured.Type = PieceType.Empty;
+
+            //if avoided
+            bool avoided = !IsInCheck(OriginalStartPiece);
+
+            //undo move
+            board.SetPiece(start, OriginalStartPiece);
+            board.SetPiece(end, OriginalEndPiece);
+
+            captured.Color = capturedOriginal.Color;
+            captured.SetPosition(capturedOriginal.Position);
+            captured.Type = capturedOriginal.Type;
+
+            return avoided;
+        }
+
+
+
 
         public void Move(Square start, Square end)
         {
@@ -191,15 +293,276 @@ namespace FinalProject
             board.SetPiece(start, new EmptyPiece(null));
         }
 
-        public bool IsInCheck(Piece piece)
+
+        public bool IsRookThreat(King king)
         {
-            King king = LocateKing(piece);
+            int[] rowDirections = { -1, 1, 0, 0 }; // Up, Down
+            int[] colDirections = { 0, 0, -1, 1 }; // Left, Right
 
-            //logic if in check return true;
+            for (int i = 0; i < 4; i++)  // Loop through each straight-line direction
+            {
+                int row = king.Position.Row;
+                int col = king.Position.Col;
 
+                while (board.InBounds(row += rowDirections[i], col += colDirections[i]))
+                {
+                    Square possibleRook = new Square(row, col);
+                    Piece piece = board.GetPiece(possibleRook);
+
+                    // Check if it's an opponent's rook
+                    if (piece.Color != king.Color && (piece.Type == PieceType.Rook))
+                    {
+                        return true;
+                    }
+
+                    // Stop if there is any other piece in the way
+                    if (!piece.IsEmpty)
+                    {
+                        break;
+                    }
+                }
+            }
 
             return false;
         }
+        public bool IsPawnThreat(King king)
+        {
+            int pawnDirection = king.IsWhite ? -1 : 1;// white up, black down;
+            int[] pawnCols = { -1, 1 }; // pawn attack diagonally
+
+            foreach(var dc in pawnCols) //dc is the possible pawn locations
+            {
+                int row = king.Position.Row + pawnDirection;
+                int col = king.Position.Col + dc;
+                Square possiblePawn = new Square(row, col);
+                if (board.InBounds(possiblePawn))
+                {
+
+
+                    if (king.IsWhite)
+                    {
+                        if ((board.GetPiece(possiblePawn).Color == PieceColor.Black) && (board.GetPiece(possiblePawn).Type == PieceType.Pawn))
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if ((board.GetPiece(possiblePawn).Color == PieceColor.White) && (board.GetPiece(possiblePawn).Type == PieceType.Pawn))
+                        {
+                            return true;
+                        }
+
+                    }
+
+                }
+                else // not a possible threat
+                {
+
+                }
+            }
+            return false;
+        }
+        public bool IsBishopThreat(King king)
+        {
+            int[] directions = { -1, 1 };
+
+            foreach (var dr in directions)
+            {
+                foreach (var dc in directions)
+                {
+                    int row = king.Position.Row;
+                    int col = king.Position.Col;
+
+                    while (board.InBounds(row += dr, col += dc))
+                    {
+                        Square possibleBishop = new Square(row, col);
+                        Piece piece = board.GetPiece(possibleBishop);
+
+                        // Check if it's an opponent's bishop
+                        if (piece.Color != king.Color && piece.Type == PieceType.Bishop)
+                        {
+                            return true;
+                        }
+
+                        // Stop if there is any other piece in the way
+                        if (!piece.IsEmpty)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+        public bool IsKnightThreat(King king)
+        {
+            int[] knightMoves = { -2, -1, 1, 2 };
+
+            foreach (var dr in knightMoves)
+            {
+                foreach (var dc in knightMoves)
+                {
+                    if (Math.Abs(dr) != Math.Abs(dc))
+                    {
+                        int row = king.Position.Row + dr;
+                        int col = king.Position.Col + dc;
+                        Square possibleKnight = new Square(row, col);
+
+                        if (board.InBounds(possibleKnight))
+                        {
+                            if (king.IsWhite)
+                            {
+
+                                if ((board.GetPiece(possibleKnight).Color == PieceColor.Black) && (board.GetPiece(possibleKnight).Type == PieceType.Knight))
+                                {
+                                    return true;
+                                }
+
+                            }
+                            else
+                            {
+                                if ((board.GetPiece(possibleKnight).Color == PieceColor.White) && (board.GetPiece(possibleKnight).Type == PieceType.Knight))
+                                {
+                                    return true;
+                                }
+
+                            }
+
+                        }
+                        else//not a possible threat
+                        {
+
+                        }
+
+                    }
+                }
+            }
+            return false;
+
+        }
+
+        /* public bool IsBishopThreat(King king)
+                {
+                    int[] directions = { -1, 1 };
+
+                    foreach (var dr in directions)
+                    {
+                        foreach (var dc in directions)
+                        {
+                            int row = king.Position.Row;
+                            int col = king.Position.Col;
+
+                            while(board.InBounds(row += dr, col += dc))
+                            {
+                                Square possibleBishop = new Square(row, col);
+
+
+                                if (king.IsWhite)
+                                {
+                                    if (board.GetPiece(possibleBishop).Color == PieceColor.Black)
+                                    {
+                                        if(board.GetPiece(possibleBishop).Type == PieceType.Bishop)
+                                        {
+                                            return true;
+                                        }
+
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    else if (board.GetPiece(possibleBishop).Color == PieceColor.White) //if its white
+                                    {
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        //ignore
+                                    }
+
+
+                                }
+                                else
+                                {
+                                    if (board.GetPiece(possibleBishop).Color == PieceColor.White)
+                                    {
+                                        if (board.GetPiece(possibleBishop).Type == PieceType.Bishop)
+                                        {
+                                            return true;
+                                        }
+
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    else if (board.GetPiece(possibleBishop).Color == PieceColor.Black) //if its black
+                                    {
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        //ignore
+                                    }
+                                }
+
+
+                            }
+
+                        }
+                    }
+
+                    return false;
+                }*/
+
+        public bool IsInCheck(Piece piece)
+        {
+            King king = LocateKing(piece);
+            Square kingPosition = king.Position;
+
+
+            //logic if in check return true;
+
+            //didnt add the is valid position
+
+            //checking for each attack:
+
+            return (IsPawnThreat(king) || IsKnightThreat(king) || IsBishopThreat(king) || IsRookThreat(king));
+        }
+
+        public bool IsCheckmate()
+        {
+            //locate current king
+            King king = isWhiteTurn ? board.whiteKing : board.blackKing;
+
+            //check if king is in check
+            if (!IsInCheck(king))
+            {
+                return false;
+            }
+
+            //king can avoid checkmate
+            if (CanAvoidCheckmate(king))
+            {
+                return false;
+            }
+
+            //other piece can defend
+            if (CanOtherPieceDefend(king))
+            {
+                return false;
+            }
+
+            //no way to avoid, checkmate
+
+
+            return true;
+        }
+
+        
+
 
         public King LocateKing(Piece piece)
         {
