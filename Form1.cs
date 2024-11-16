@@ -219,7 +219,7 @@ namespace FinalProject
             Square clickedSquare = new Square(row, col);
 
             // Call SquareClick in Game to handle logic for selection and move
-            bool moveSuccessful = game.SquareClick(clickedSquare);
+            bool moveSuccessful = game.HandleSquareClick(clickedSquare);
 
             // Handle UI feedback based on Game's internal state
             if (game.selectedPiece.IsEmpty)

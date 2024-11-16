@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.CodeDom.Compiler;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace FinalProject
 {
@@ -13,41 +16,39 @@ namespace FinalProject
         private bool isWhiteTurn;
         internal Piece selectedPiece { get; set; }
         private bool clickedFirst;
+        private Button[,] boardButtons;
 
-        public Game()
+        public Game(Button[,] buttons)
         {
             board = new Board();
             isWhiteTurn = true;
             selectedPiece = new EmptyPiece(null);
             clickedFirst = false;
+            boardButtons = buttons; // init the ui buttons
         }
 
 
 
-        public bool SquareClick(Square position)
+        public bool HandleSquareClick(Square position, Button clickedButton)
         {
             if (selectedPiece.IsEmpty || clickedFirst == false)//first time clicking on a piece
             {
-                if (!board.GetPiece(position).IsEmpty) // if 
+                if (!board.GetPiece(position).IsEmpty) // if there is a piece
                 {
-                    selectedPiece = board.GetPiece(position);
-                    clickedFirst = true;
+                    selectedPiece = board.GetPiece(position); // select that piece
+                    clickedFirst = true; // approve clicked once
 
-                    if (Check1stPressValidty(selectedPiece.Position)) //if this function is true, click 1 was made
+                    if (Check1stPressValidity(selectedPiece.Position, clickedButton)) //if this function is true, click 1 was made
                     {
 
-                    }
-                    else
-                    {
-                        selectedPiece = new EmptyPiece(null);
-                        clickedFirst = false;
+                        // what happenes here?
                     }
                 }
                 
             }
             else
             {
-                if(Check2ndPressValidty(selectedPiece.Position, position))//if this function was true, click 2 was made
+                if(Check2ndPressValidity(selectedPiece.Position, position))//if this function was true, click 2 was made
                 {
                     clickedFirst = false;
                 }
@@ -61,48 +62,67 @@ namespace FinalProject
 
         }
 
-        public bool Check1stPressValidty(Square position)
+        public bool Check1stPressValidity(Square position,Button clickedButton)
         {
             Piece piece = board.GetPiece(position);
 
-
-            if (board.InBounds(position.Row, position.Col))
+            if (board.InBounds(position))
             {
                 if (ValidTurn(piece)) //turn and piece same color
                 {
-                    //mark the piece
-
-
-
+                    clickedButton.BackColor = Color.Yellow;// highlight player   
+                    return true;
 
                 }
                 else // turn and piece opposite colors
                 {
-                    //push a message
+                    MessageBox.Show("Not Your Turn");
+                    selectedPiece = new EmptyPiece(null);
+                    clickedFirst = false;
+                    return false; //not your turn
                 }
             }
-            else
+            else//not in bounds
             {
-
+                //ignore
+                return false;
             }
+            
 
         }
 
-        public bool Check2ndPressValidty(Square start, Square end)
+        public bool Check2ndPressValidity(Square start, Square end)
         {
 
             Piece mainPiece = board.GetPiece(start);
             Piece targetSquare = board.GetPiece(end);
 
 
-            if (board.InBounds(end.Row, end.Col))
+            if (board.InBounds(end))
             {
                 if (targetSquare.IsEmpty)
                 {
                     if (mainPiece.IsValidMove(start, end, board)) //if this square can be accessed 
                     {
-                        //check if im in check and if i am, check if the next move blocks the check, if not - cant do
-                        //go here
+                        if (IsInCheck(mainPiece))
+                        {
+                            if (CanAvoidCheck(start, end))
+                            {
+                                Move(start, end);
+                                return true;
+                            }
+                            else
+                            {
+                                MessageBox.Show("Invalid move! You cannot leave your king in check.");
+                                return false;
+                            }
+
+                        }
+                        else
+                        {
+                            Move(start, end);
+                            return true;
+                        }
                     }
                     else //do nothing, print a message, 
                     {
@@ -136,12 +156,62 @@ namespace FinalProject
             }
             else // not in bounds
             {
-
+                return false;
             }
 
             
         }
+
+        public bool CanAvoidCheck(Square start, Square end)
+        {
+            Piece OriginalStartPiece = board.GetPiece(start);
+            Piece OriginalEndPiece = board.GetPiece(end);
+
+
+            //DO THE MOVE
+            board.SetPiece(end, OriginalStartPiece);
+            board.SetPiece(start, new EmptyPiece(null));
+
+            //if avoided
+            bool avoided = !IsInCheck(OriginalStartPiece);
+
+            //undo move
+            board.SetPiece(start, OriginalStartPiece);
+            board.SetPiece(end, OriginalEndPiece);
+
+            return avoided;
+        }
         
+
+        public void Move(Square start, Square end)
+        {
+            Piece OriginalStartPiece = board.GetPiece(start);
+
+            board.SetPiece(end, OriginalStartPiece);
+            board.SetPiece(start, new EmptyPiece(null));
+        }
+
+        public bool IsInCheck(Piece piece)
+        {
+            King king = LocateKing(piece);
+
+            //logic if in check return true;
+
+
+            return false;
+        }
+
+        public King LocateKing(Piece piece)
+        {
+            if (piece.IsWhite)
+            {
+                return board.whiteKing;
+            }
+            else
+            {
+                return board.blackKing;
+            }
+        }
 
 
         private void SwitchTurn()

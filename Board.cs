@@ -12,6 +12,8 @@ namespace FinalProject
 
         public const int Rows = 8;
         public const int Columns = 4;
+        public King whiteKing { get; set; }
+        public King blackKing { get; set; }
 
 
         public Board(int rows, int cols)
@@ -31,7 +33,8 @@ namespace FinalProject
         public void InitBoard() //todo change all the hardcoded numbers to consts.
         {
             //init the black pieces
-            SetPiece(new Square(0, 0), new King(PieceColor.Black, new Square(0, 0)));
+            blackKing = new King(PieceColor.Black, new Square(0, 0));
+            SetPiece(new Square(0, 0), blackKing);
             SetPiece(new Square(0, 1), new Bishop(PieceColor.Black, new Square(0, 1)));
             SetPiece(new Square(0, 2), new Knight(PieceColor.Black, new Square(0, 2)));
             SetPiece(new Square(0, 3), new Rook(PieceColor.Black, new Square(0, 3)));
@@ -40,25 +43,26 @@ namespace FinalProject
             //init the black&white pawns
             for (int col = 0; col < Columns; col++)
             {
-                SetPiece(new Square(1, col), new Pawn(PieceColor.Black), new Square(1, col));
-                SetPiece(new Square(6, col), new Pawn(PieceColor.White), new Square(6, col));
+                SetPiece(new Square(1, col), new Pawn(PieceColor.Black, new Square(1, col)));
+                SetPiece(new Square(6, col), new Pawn(PieceColor.White, new Square(6, col)));
             }
 
             //init the white pieces
-            SetPiece(new Square(7, 0), new King(PieceColor.White, new Square(7, 0)));
+            whiteKing = new King(PieceColor.Black, new Square(7, 0));
+            SetPiece(new Square(7, 0), whiteKing);
             SetPiece(new Square(7, 1), new Bishop(PieceColor.White, new Square(7, 1)));
             SetPiece(new Square(7, 2), new Knight(PieceColor.White, new Square(7, 2)));
             SetPiece(new Square(7, 3), new Rook(PieceColor.White, new Square(7, 3)));
 
         }
-        public bool InBounds(int Row, int Col)
+        public bool InBounds(Square position)
         {
-            return Row >= 0 && Row < Rows && Col >= 0 && Col < Columns;
+            return position.Row >= 0 && position.Row < Rows && position.Col >= 0 && position.Col < Columns;
         }
 
         public void SetPiece(Square position, Piece piece)
         {
-            if(InBounds(position.Row, position.Col))
+            if(InBounds(position))
             {
                 squares[position.Row, position.Col] = piece;
                 //if(piece != null)  // might be, todo
