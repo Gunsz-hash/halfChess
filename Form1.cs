@@ -18,14 +18,13 @@ namespace FinalProject
         //private bool isWhiteTurn = true;  // Track the turn (White starts first)
         private Point whiteKingPosition;
         private Point blackKingPosition;
-        private Point? selectedPiece = null;
         private Timer moveTimer;
         //itamar branch
 
         private ComboBox intervalComboBox { get; set; }
 
-
-
+        private Game game;
+        
 
 
 
@@ -56,6 +55,8 @@ namespace FinalProject
             InitializeComponent();
             InitializeBoard();
             PlacePieces();
+
+            game = new Game();
 
             // Adjust the form size to make it bigger and provide space for the ComboBox
             this.ClientSize = new Size(5 * 120, 8 * 120 + 100); // Increase form height by 100 for ComboBox area
@@ -143,7 +144,7 @@ namespace FinalProject
             }
         }
 
-        private void Button_Click(object sender, EventArgs e)
+        private void Button_Click2(object sender, EventArgs e)
         {
             var button = (Button)sender;
             var position = (Point)button.Tag;
@@ -208,6 +209,34 @@ namespace FinalProject
                     MessageBox.Show("Invalid move.");
                 }
             }
+        }
+
+        private void Button_Click(object sender, EventArgs e)
+        {
+            var button = (Button)sender;
+            var position = (Point)button.Tag;
+            int row = position.X, col = position.Y;
+            Square clickedSquare = new Square(row, col);
+
+            // Call SquareClick in Game to handle logic for selection and move
+            bool moveSuccessful = game.SquareClick(clickedSquare);
+
+            // Handle UI feedback based on Game's internal state
+            if (game.selectedPiece.IsEmpty)
+            {
+                // If the piece selection is valid, highlight it
+                if (!game.board.GetPiece(clickedSquare).IsEmpty)
+                {
+                    game.selectedPiece = game.board.GetPiece(clickedSquare);
+                    button.BackColor = Color.Yellow;
+                }
+                else
+                {
+                    MessageBox.Show("Invalid selection. Please select a valid piece.");
+                }
+            }
+
+
         }
 
         private void CheckValidator(bool isWhiteTurn)
@@ -468,7 +497,7 @@ namespace FinalProject
         //}
 
 
-        private bool IsValidMove(int startRow, int startCol, int endRow, int endCol)
+/*        private bool IsValidMove(int startRow, int startCol, int endRow, int endCol)
         {
 
             string piece = board[startRow, startCol];
@@ -553,8 +582,8 @@ namespace FinalProject
 
             return false;
         }
-
-        private bool IsPathClear(Point start, Point end)
+*/
+      /*  private bool IsPathClear(Point start, Point end)
         {
             int rowDiff = Math.Sign(end.X - start.X);
             int colDiff = Math.Sign(end.Y - start.Y);
@@ -639,7 +668,7 @@ namespace FinalProject
             return (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
         }
 
-
+*/
         private bool IsPieceColorCorrect(int row, int col, bool checkWhite)
         {
             if (board[row, col] == null)

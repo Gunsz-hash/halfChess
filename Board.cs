@@ -79,14 +79,15 @@ namespace FinalProject
 
 
             Piece piece = GetPiece(startPoint);
-            if(piece != null && piece.IsValidMove(startPoint,endPoint,this) && MayMove(piece, endPoint))
+            if(!piece.IsEmpty && piece.IsValidMove(startPoint,endPoint,this) && MayMove(piece, endPoint))
             {
                 SetPiece(endPoint, piece);
-                SetPiece(startPoint, null); // todo null or empty, check later;
+                Piece emptyPiece = new EmptyPiece(startPoint);
+                SetPiece(startPoint, emptyPiece);
                 return true;
             }
 
-            else if(piece != null && piece.IsValidMove(startPoint, endPoint, this) && !MayMove(piece, endPoint))
+            else if(!piece.IsEmpty && piece.IsValidMove(startPoint, endPoint, this) && !MayMove(piece, endPoint))
             {
                 // print some piece is blocking or friendly piece in endPoint
                 return false;

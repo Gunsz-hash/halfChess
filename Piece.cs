@@ -12,7 +12,7 @@ namespace FinalProject
 
     internal abstract class Piece
     {
-        public PieceColor Color { get; set; }
+        public PieceColor Color { get; private set; }
         public PieceType Type { get; private set;}
         public Square Position { get; private set;}
 
@@ -29,10 +29,10 @@ namespace FinalProject
 
         public abstract bool IsValidMove(Square startPoint, Square endPoint, Board board);
 
-        public bool IsWhite()
-        {
-            return Color == PieceColor.White;
-        }
+
+        public bool IsEmpty => Type == PieceType.Empty;
+
+        public bool IsWhite => Color == PieceColor.White;
 
         public void SetPosition(Square newPosition)
         {

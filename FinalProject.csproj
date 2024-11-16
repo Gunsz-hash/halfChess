@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Bishop.cs" />
     <Compile Include="Board.cs" />
+    <Compile Include="EmptyPiece.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
