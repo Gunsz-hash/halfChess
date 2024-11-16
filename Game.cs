@@ -25,10 +25,6 @@ namespace FinalProject
 
 
 
-
-
-
-
 /*
  
     if clickedPiece turn:
@@ -57,7 +53,24 @@ namespace FinalProject
  */
 
         
+        //is check
+        //check var
+        //can king escape?
+        //is checkmate
 
+        //capture
+        //can capture (if not in check)
+
+        //isgameover(reset for a new board)
+
+        //switch turn
+        //get turn
+
+
+        //make move
+
+        //can move?
+        
 
 
 
