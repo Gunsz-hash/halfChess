@@ -8,7 +8,7 @@ namespace FinalProject
 {
     internal class King : Piece
     {
-        public King(PieceColor color, Square position) : base(color, PieceType.Knight, position) { }
+        public King(PieceColor color, Square position) : base(color, PieceType.King, position) { }
 
 
 

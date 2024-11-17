@@ -28,7 +28,17 @@ namespace FinalProject
 
         }
 
-
+        /*public IEnumerable<Piece> getPiecesByColor(bool isWhite)
+        {
+            List<Piece> playerPieces = new List<Piece>();
+            for(int row = 0; row <Rows; row++)
+            {
+                for(int col = 0; col < Columns; col++)
+                {
+                    Piece piece = piece
+                }
+            }
+        }*/
 
         public void InitBoard() //todo change all the hardcoded numbers to consts.
         {

@@ -18,6 +18,19 @@ namespace FinalProject
         private bool clickedFirst;
         private Button[,] boardButtons;
 
+        //@
+        private Timer gameTimer;
+        private int timeLeft;
+        private const int DEFAULT_TIME = 20;
+
+
+        private bool isFirstMove;
+
+        //@
+
+
+        //how does a new game get created after one is finished?
+
         public Game(Button[,] buttons)
         {
             board = new Board();
@@ -25,8 +38,37 @@ namespace FinalProject
             selectedPiece = new EmptyPiece(null);
             clickedFirst = false;
             boardButtons = buttons; // init the ui buttons
+            isFirstMove = true;
+
+            //@
+            InitializeTimer();
+            //@
         }
 
+        //@
+        private void InitializeTimer()
+        {
+            gameTimer = new Timer();
+            gameTimer.Interval = 1000;// 1 second
+            gameTimer.Tick += Timer_Tick;
+            timeLeft = DEFAULT_TIME;
+        }
+        //@
+
+
+        //@
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            timeLeft--;
+            if (timeLeft <= 0)
+            {
+                gameTimer.Stop();
+                string winner = isWhiteTurn ? "Black" : "White";
+                MessageBox.Show($"Time's up! {winner} wins!");//why?
+                EndGame();
+            }
+        }
+        //@
 
 
         public void HandleSquareClick(Square position, Button clickedButton)
@@ -38,10 +80,13 @@ namespace FinalProject
                     selectedPiece = board.GetPiece(position); // select that piece
                     clickedFirst = true; // approve clicked once
 
-                    if (Check1stPressValidity(selectedPiece.Position, clickedButton)) //if this function is true, click 1 was made
+                    if (Check1stPressValidity(selectedPiece.Position, clickedButton))
                     {
-
-                        // what happenes here?
+                        if (isFirstMove)//the first player move starts the game
+                        {
+                            gameTimer.Start();
+                            isFirstMove = false;
+                        }
                     }
                 }
                 
@@ -49,16 +94,41 @@ namespace FinalProject
             
             else
             {
-                if(Check2ndPressValidity(selectedPiece.Position, position))//if this function was true, click 2 was made
+                if(Check2ndPressValidity(selectedPiece.Position, position, clickedButton))//if this function was true, click 2 was made
                 {
-                    //next turn? switch turn
-                    clickedFirst = false;
+                    // the case which the move was successful
+                    gameTimer.Stop();
+                    
+
+                    //check if the game end
+                    if (IsCheckmate())
+                    {
+                        string winner = isWhiteTurn ? "Black" : "White";
+                        MessageBox.Show($"Checkmate! {winner} wins!");
+                        EndGame();
+                        //reset game?
+
+                    }
+
+                    else if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
+                    {
+                        MessageBox.Show("Check!"); //do we need it?
+                        SwitchTurn();
+                    }
+
+                    else
+                    {
+                        SwitchTurn();
+                    }
                 }
                 else
                 {
-                    //ignored somehow
-                    
+                    //should really do it? check!
+                    selectedPiece = new EmptyPiece(null);
+                    clickedFirst = false;
+                    ResetBoardColors(); 
                 }
+               
                 
             }
 
@@ -91,6 +161,12 @@ namespace FinalProject
             }
             
 
+        }
+
+        private void EndGame()
+        {
+            gameTimer.Stop();
+            isFirstMove = true; //reset the first turn for the timer in first move
         }
 
         public bool Check2ndPressValidity(Square start, Square end, Button clickedButton)
@@ -128,11 +204,9 @@ namespace FinalProject
                             return true;
                         }
                     }
-                    else //do nothing.
-                    {
-                        return false;
-                    }
+                    
                 }
+
 
                 else if (targetSquare.Color == mainPiece.Color) // if its a friendly piece
                 {
@@ -177,18 +251,10 @@ namespace FinalProject
                         //check if im in check and if i am, check if the next move blocks the check, if not - cant do
                         //capture
                     }
-                    else //do nothing, print a message, 
-                    {
-                        //ignore
-                    }
                 }
             }
-            else // not in bounds
-            {
-                return false;
-            }
+            return false;
 
-            
         }
 
         public bool CanAvoidCheck(Square start, Square end)
@@ -209,11 +275,6 @@ namespace FinalProject
             board.SetPiece(end, OriginalEndPiece);
 
             return avoided;
-        }
-
-        public bool CanOtherPieceDefend(King king)
-        {
-
         }
 
         public bool CanAvoidCheckmate(King king)
@@ -549,6 +610,14 @@ namespace FinalProject
                 return false;
             }
 
+
+
+
+
+            //todo can other piece defend or capture, 
+            //the function that checks if someone is threathning the king (ischeck), can be used instead on the king, on the attcking op piece
+
+
             //other piece can defend
             if (CanOtherPieceDefend(king))
             {
@@ -580,6 +649,10 @@ namespace FinalProject
         private void SwitchTurn()
         {
             isWhiteTurn = !isWhiteTurn;
+            clickedFirst = false;
+            selectedPiece = new EmptyPiece(null);
+            timeLeft = DEFAULT_TIME;
+            gameTimer.Start();
         }
 
 

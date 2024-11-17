@@ -34,6 +34,7 @@ namespace FinalProject
 
         public bool IsWhite => Color == PieceColor.White;
 
+
         public void SetPosition(Square newPosition)
         {
             //if(!newPosition.InBounds) todo fix inbound - if not, throw 

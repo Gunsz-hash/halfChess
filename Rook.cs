@@ -8,7 +8,7 @@ namespace FinalProject
 {
     internal class Rook : Piece
     {
-        public Rook(PieceColor color, Square position) : base(color, PieceType.Knight, position) { }
+        public Rook(PieceColor color, Square position) : base(color, PieceType.Rook, position) { }
 
         public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
