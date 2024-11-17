@@ -10,9 +10,9 @@ namespace FinalProject
     {
 
 
-        public Pawn(PieceColor color, Position position) : base(color, PieceType.Pawn, position) { }
+        public Pawn(PieceColor color, Square position) : base(color, PieceType.Pawn, position) { }
 
-        public override bool IsValidMove(Position startPoint, Position endPoint, Board board)
+        public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
 
             int rowDiffernce = Math.Abs(endPoint.Row - startPoint.Row);
@@ -43,7 +43,7 @@ namespace FinalProject
 
                     else
                     {
-                        return CheckDirectionRow(startPoint, endPoint); ;
+                        return CheckUpOrDown(startPoint, endPoint); ;
                     }
 
                 }
@@ -56,7 +56,7 @@ namespace FinalProject
 
                     else
                     {
-                        return CheckDirectionRow(startPoint, endPoint); ;
+                        return CheckUpOrDown(startPoint, endPoint); ;
                     }
                 }
 
@@ -65,7 +65,7 @@ namespace FinalProject
 
             else if (rowDiffernce == 1 && colDiffernce == 0) //regular forward move
             {
-                return CheckDirectionRow(startPoint, endPoint);
+                return CheckUpOrDown(startPoint, endPoint);
             }
 
             // horizontal moves
@@ -79,7 +79,7 @@ namespace FinalProject
 
             else if(rowDiffernce == 1 && colDiffernce == 1)
             {
-                return CheckDirectionRow(startPoint,endPoint);
+                return CheckUpOrDown(startPoint,endPoint);
             }
             else
             {
@@ -88,9 +88,9 @@ namespace FinalProject
 
         }
 
-        public bool CheckDirectionRow(Position start, Position end)
+        public bool CheckUpOrDown(Square start, Square end)
         {
-            if (this.Color == PieceColor.Black)
+            if (this.Color == PieceColor.Black) // down
             {
                 if (end.Row > start.Row)
                 {
@@ -104,7 +104,7 @@ namespace FinalProject
 
             else
             {
-                if (end.Row < start.Row)
+                if (end.Row < start.Row) //up
                 {
                     return true;
                 }
