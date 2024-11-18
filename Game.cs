@@ -12,54 +12,86 @@ namespace FinalProject
     internal class Game
     {
 
+        public delegate void UpdateUIDelegate(Board board, bool isWhiteTurn, int timeLeft, bool isCheck);
+        private readonly UpdateUIDelegate updateUI;  // Use our defined delegate type
+
         internal Board board;
         private bool isWhiteTurn;
-        internal Piece selectedPiece { get; set; }
+        internal Piece SelectedPiece { get; set; }
         private bool clickedFirst;
-        private Button[,] boardButtons;
+       // private Button[,] boardButtons;
 
         //@
         private Timer gameTimer;
         private int timeLeft;
-        private const int DEFAULT_TIME = 20;
+        private int timeLimit = 20; //default
 
 
         private bool isFirstMove;
+
 
         //@
 
 
         //how does a new game get created after one is finished?
 
-        public Game(Button[,] buttons)
+        public Game(UpdateUIDelegate updateUICallback)
         {
             board = new Board();
+            board.InitBoard();
             isWhiteTurn = true;
-            selectedPiece = new EmptyPiece(null);
+            SelectedPiece = new EmptyPiece(null);
             clickedFirst = false;
-            boardButtons = buttons; // init the ui buttons
             isFirstMove = true;
+            updateUI = updateUICallback;
 
-            //@
+
             InitializeTimer();
             //@
+            updateUI(board, isWhiteTurn, timeLimit, false);
         }
 
         //@
         private void InitializeTimer()
         {
-            gameTimer = new Timer();
-            gameTimer.Interval = 1000;// 1 second
+            gameTimer = new Timer
+            {
+                Interval = 1000// 1 second
+            };
             gameTimer.Tick += Timer_Tick;
-            timeLeft = DEFAULT_TIME;
+            timeLeft = timeLimit;
         }
         //@
+
+        public void SetTimeLimit(int seconds)
+        {
+            bool wasRunning = gameTimer.Enabled;
+            if (wasRunning)
+            {
+                gameTimer.Stop();
+
+            }
+
+            timeLimit = seconds;
+            timeLeft = seconds;
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+
+            if (wasRunning)
+            {
+                gameTimer.Start();
+            }
+
+        }
 
 
         //@
         private void Timer_Tick(object sender, EventArgs e)
         {
             timeLeft--;
+
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+
+
             if (timeLeft <= 0)
             {
                 gameTimer.Stop();
@@ -71,17 +103,22 @@ namespace FinalProject
         //@
 
 
-        public void HandleSquareClick(Square position, Button clickedButton)
+        public void HandleSquareClick(Square position, ChessForm form)
         {
-            if (selectedPiece.IsEmpty || clickedFirst == false)//first time clicking on a piece
+            if (SelectedPiece.IsEmpty || !clickedFirst)//first time clicking on a piece
             {
                 if (!board.GetPiece(position).IsEmpty) // if there is a piece
                 {
-                    selectedPiece = board.GetPiece(position); // select that piece
+                    SelectedPiece = board.GetPiece(position); // select that piece
                     clickedFirst = true; // approve clicked once
 
-                    if (Check1stPressValidity(selectedPiece.Position, clickedButton))
+                    if (Check1stPressValidity(SelectedPiece.Position))
                     {
+                        form.HighlightSquare(SelectedPiece.Position, Color.Yellow);
+                        //optionally:
+                        // form.ShowValidMoves(GetValidMoves(position));
+
+
                         if (isFirstMove)//the first player move starts the game
                         {
                             gameTimer.Start();
@@ -94,10 +131,13 @@ namespace FinalProject
             
             else
             {
-                if(Check2ndPressValidity(selectedPiece.Position, position, clickedButton))//if this function was true, click 2 was made
+                if(Check2ndPressValidity(SelectedPiece.Position, position))//if this function was true, click 2 was made
                 {
+                    form.ResetBoardColors();
+
                     // the case which the move was successful
                     gameTimer.Stop();
+                    form.ResetBoardColors();
                     
 
                     //check if the game end
@@ -124,32 +164,34 @@ namespace FinalProject
                 else
                 {
                     //should really do it? check!
-                    selectedPiece = new EmptyPiece(null);
+                    form.ResetBoardColors();
+                    SelectedPiece = new EmptyPiece(null);
                     clickedFirst = false;
-                    ResetBoardColors(); 
+                   
                 }
                
                 
             }
+            //why that function isnt used?
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
 
         }
 
-        public bool Check1stPressValidity(Square position,Button clickedButton)
+        public bool Check1stPressValidity(Square position)
         {
             Piece piece = board.GetPiece(position);
 
             if (board.InBounds(position))
             {
                 if (ValidTurn(piece)) //turn and piece same color
-                {
-                    clickedButton.BackColor = Color.Yellow;// highlight player   
+                {   
                     return true;
 
                 }
                 else // turn and piece opposite colors
                 {
                     MessageBox.Show("Not Your Turn");
-                    selectedPiece = new EmptyPiece(null);
+                    SelectedPiece = new EmptyPiece(null);
                     clickedFirst = false;
                     return false; //not your turn
                 }
@@ -167,9 +209,10 @@ namespace FinalProject
         {
             gameTimer.Stop();
             isFirstMove = true; //reset the first turn for the timer in first move
+            updateUI(board, isWhiteTurn, timeLeft, false);
         }
 
-        public bool Check2ndPressValidity(Square start, Square end, Button clickedButton)
+        public bool Check2ndPressValidity(Square start, Square end)
         {
 
             Piece mainPiece = board.GetPiece(start);
@@ -187,7 +230,7 @@ namespace FinalProject
                             if (CanAvoidCheck(start, end))
                             {
                                 Move(start, end);
-                                ResetBoardColors();
+                                //ResetBoardColors();
                                 return true;
                             }
                             else
@@ -200,7 +243,7 @@ namespace FinalProject
                         else
                         {
                             Move(start, end);
-                            ResetBoardColors();
+                            //ResetBoardColors();
                             return true;
                         }
                     }
@@ -210,9 +253,13 @@ namespace FinalProject
 
                 else if (targetSquare.Color == mainPiece.Color) // if its a friendly piece
                 {
-                    selectedPiece = board.GetPiece(end);
-                    ResetBoardColors();
-                    clickedButton.BackColor = Color.Yellow;// highlight player   
+                    SelectedPiece = board.GetPiece(end);
+                    //ResetBoardColors();
+
+
+                    //todo: why not (below)?
+
+                   // clickedButton.BackColor = Color.Yellow;// highlight player   
                     return false;
 
                 }
@@ -228,7 +275,7 @@ namespace FinalProject
                             if (CanAvoidCheckByCapture(start, end))
                             {
                                 Capture(start, end);
-                                ResetBoardColors();
+                                //ResetBoardColors();
                                 return true;
                             }
                             else
@@ -242,7 +289,7 @@ namespace FinalProject
                         else
                         {
                             Capture(start, end);
-                            ResetBoardColors();
+                           // ResetBoardColors();
                             return true;
                         }
 
@@ -581,7 +628,6 @@ namespace FinalProject
         public bool IsInCheck(Piece piece)
         {
             King king = LocateKing(piece);
-            Square kingPosition = king.Position;
 
 
             //logic if in check return true;
@@ -619,10 +665,10 @@ namespace FinalProject
 
 
             //other piece can defend
-            if (CanOtherPieceDefend(king))
+            /*if (CanOtherPieceDefend(king))
             {
                 return false;
-            }
+            }*/
 
             //no way to avoid, checkmate
 
@@ -650,9 +696,10 @@ namespace FinalProject
         {
             isWhiteTurn = !isWhiteTurn;
             clickedFirst = false;
-            selectedPiece = new EmptyPiece(null);
-            timeLeft = DEFAULT_TIME;
+            SelectedPiece = new EmptyPiece(null);
+            timeLeft = timeLimit;
             gameTimer.Start();
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
         }
 
 

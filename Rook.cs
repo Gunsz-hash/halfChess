@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProject
 {
-    internal class Rook : Piece
+    public class Rook : Piece
     {
         public Rook(PieceColor color, Square position) : base(color, PieceType.Rook, position) { }
 

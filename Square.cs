@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProject
 {
-    internal class Square
+    public class Square
     {
         public int Row { get; private set; }
         public int Col { get; private set; }

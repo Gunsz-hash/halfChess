@@ -10,7 +10,7 @@ namespace FinalProject
     public enum PieceColor {None, White, Black}
 
 
-    internal abstract class Piece
+    public  abstract class Piece
     {
         public PieceColor Color { get;  set; }
         public PieceType Type { get;  set;}

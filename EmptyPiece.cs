@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProject
 {
-    internal class EmptyPiece : Piece
+    public class EmptyPiece : Piece
     {
 
         public EmptyPiece(Square position) : base(PieceColor.None, PieceType.Empty, position) { }
