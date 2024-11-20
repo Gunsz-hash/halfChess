@@ -19,6 +19,23 @@ namespace FinalProject
             int colDiffernce = Math.Abs(endPoint.Col - startPoint.Col);
 
 
+            //need to check for a piece(if its a capture or a move:
+            Piece target = board.GetPiece(endPoint);
+
+            if(!target.IsEmpty) // if its a capture (diagonally)
+            {
+                if(rowDiffernce == 1 && colDiffernce == 1)
+                {
+                    return CheckUpOrDown(startPoint, endPoint);
+                }
+                return false;
+            }
+
+            // a move:
+
+
+
+            //if too long
             if (rowDiffernce + colDiffernce > 2)
             {
                 return false;
@@ -27,10 +44,15 @@ namespace FinalProject
 
             // forward moves (also backwards, but disabled)
 
+       
+
             else if ((rowDiffernce == 0 && colDiffernce == 0) || rowDiffernce > 2 || colDiffernce > 1) // (start and end are the same) or if more than 2 rows or 1 col
             {
                 return false;
             }
+
+
+
 
             else if (rowDiffernce > 1 && colDiffernce == 0) //if i can use a double "jump"
             {
@@ -75,12 +97,7 @@ namespace FinalProject
                 return true;
             }
 
-            //diagonal moves
-
-            else if(rowDiffernce == 1 && colDiffernce == 1)
-            {
-                return CheckUpOrDown(startPoint,endPoint);
-            }
+            
             else
             {
                 return false;

@@ -25,11 +25,27 @@ namespace FinalProject
         private Panel boardPanel;
 
 
+        //flashing red chess:
+        private Timer checkFlashTimer;
+        private bool isFlashing;
+        private Square checkSquare;
+
+
         public ChessForm()
         {
             InitializeComponent();
+
+            int width = (BUTTON_SIZE*4) + (BOARD_MARGIN*2) + 150;
+            int height = (BUTTON_SIZE * 8) + (BOARD_MARGIN * 3) + 60;
+
+            this.Size = new Size(width, height);
+            this.MinimumSize = this.Size;
+
             this.Size = new Size(BUTTON_SIZE * 6, BUTTON_SIZE * 9);
             InitializeComponents();
+
+            InitializeCheckFlashTimer();
+
         }
 
         private void InitializeComponents()
@@ -88,6 +104,46 @@ namespace FinalProject
 
         }
 
+
+        private void InitializeCheckFlashTimer()
+        {
+            checkFlashTimer = new System.Windows.Forms.Timer();
+            checkFlashTimer.Interval = 250;// 1/4 sec
+            checkFlashTimer.Tick += CheckFlash_Tick;
+        }
+
+
+        private void CheckFlash_Tick(object sender, EventArgs e)
+        {
+
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => CheckFlash_Tick(sender, e)));
+                return;
+            }
+
+
+            if (isFlashing && checkSquare != null)
+            {
+
+                try
+                {
+                    //toggle the aklternating red color
+                    Color newColor = boardButtons[checkSquare.Row, checkSquare.Col].BackColor == Color.Red ?
+                        ((checkSquare.Row + checkSquare.Col) % 2 == 0 ? Color.SaddleBrown : Color.RosyBrown) : Color.Red;
+
+                    boardButtons[checkSquare.Row, checkSquare.Col].BackColor = newColor;
+                }
+
+                catch(Exception ex)
+                {
+                    MessageBox.Show($"Error in flash ticking: {ex.Message}");
+                    checkFlashTimer.Stop();
+                    isFlashing = false;
+                }
+            }
+        }
+
         private void TimeComboBox_SelectionChanged(Object sender, EventArgs e)
         {
             int selectedTime = (int)TimeComboBox.SelectedItem;
@@ -142,41 +198,87 @@ namespace FinalProject
             }
 
 
-            // Update timer
-            timerLabel.Text = $"Time: {timeLeft}";
-
-            // Update turn label
-            turnLabel.Text = $"Turn: {(isWhiteTurn ? "White" : "Black")}";
-
-            // Update pieces
-            for (int row = 0; row < Board.Rows; row++)
+            try
             {
-                for (int col = 0; col < Board.Columns; col++)
-                {
-                    Piece piece = board.GetPiece(new Square(row, col));
+                // Update timer
+                timerLabel.Text = $"Time: {timeLeft}";
 
-                    if (piece == null)
+                // Update turn label
+                turnLabel.Text = $"Turn: {(isWhiteTurn ? "White" : "Black")}";
+
+                // Update pieces
+                for (int row = 0; row < Board.Rows; row++)
+                {
+                    for (int col = 0; col < Board.Columns; col++)
                     {
-                        MessageBox.Show($"Null piece at {row},{col}");
-                        continue;
+                        Piece piece = board.GetPiece(new Square(row, col));
+
+                        if (piece == null)
+                        {
+                            MessageBox.Show($"Null piece at {row},{col}");
+                            continue;
+                        }
+
+
+                        boardButtons[row, col].Text = GetPieceSymbol(piece);
+                        boardButtons[row, col].ForeColor = piece.IsWhite ? Color.White : Color.Black;
+                    }
+                }
+
+                // If in check, highlight the king
+                if (isCheck)
+                {
+                    King kingInCheck = isWhiteTurn ? board.whiteKing : board.blackKing;
+
+
+                    if (kingInCheck != null && kingInCheck.Position != null)
+                    {
+
+                        //handle flashing
+                        checkSquare = kingInCheck.Position;
+                        isFlashing = true;
+
+                        if (checkFlashTimer != null && !checkFlashTimer.Enabled)
+                        {
+                            checkFlashTimer.Start();
+                        }
+
+
+                        //boardButtons[kingInCheck.Position.Row, kingInCheck.Position.Col].BackColor = Color.Red;
+                    }
+                }
+                else
+                {
+                    isFlashing = false;
+
+                    if (checkFlashTimer != null && checkFlashTimer.Enabled)
+                    {
+                        checkFlashTimer.Stop();
                     }
 
-
-                    boardButtons[row, col].Text = GetPieceSymbol(piece);
-                    boardButtons[row, col].ForeColor = piece.IsWhite ? Color.Black : Color.Red;
+                    ResetBoardColors();
                 }
             }
-
-            // If in check, highlight the king
-            if (isCheck)
+            catch(Exception ex)
             {
-                King kingInCheck = isWhiteTurn ? board.whiteKing : board.blackKing;
-                if (kingInCheck != null && kingInCheck.Position != null)
-                {
-                    boardButtons[kingInCheck.Position.Row, kingInCheck.Position.Col].BackColor = Color.Red;
-                }
+                MessageBox.Show($"Error updating UI: {ex.Message}");
             }
+
+
+            
         }
+
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (checkFlashTimer != null)
+            {
+                checkFlashTimer.Stop();
+                checkFlashTimer.Dispose();
+            }
+            base.OnFormClosing(e);
+        }
+
 
         public void HighlightSquare(Square position, Color color)
         {
@@ -216,7 +318,7 @@ namespace FinalProject
                 {
                     if ((row + col) %2 == 0)
                     {
-                        boardButtons[row, col].BackColor = Color.White;
+                        boardButtons[row, col].BackColor = Color.SaddleBrown;
                         boardButtons[row, col].FlatAppearance.BorderColor = Color.Black;
                     }
                     else

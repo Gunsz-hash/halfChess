@@ -72,7 +72,7 @@ namespace FinalProject
             }
 
             //init the white pieces
-            whiteKing = new King(PieceColor.Black, new Square(7, 0));
+            whiteKing = new King(PieceColor.White, new Square(7, 0));
             SetPiece(new Square(7, 0), whiteKing);
             SetPiece(new Square(7, 1), new Bishop(PieceColor.White, new Square(7, 1)));
             SetPiece(new Square(7, 2), new Knight(PieceColor.White, new Square(7, 2)));
