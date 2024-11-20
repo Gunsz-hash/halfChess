@@ -40,6 +40,50 @@ namespace FinalProject
             }
         }*/
 
+        public bool IsPathClear(Square start, Square end, bool isDiagonal) //is diagonal used for the bishop problem
+        {
+
+
+            if (isDiagonal)
+            {
+                int rowDifference = Math.Abs(end.Row - start.Row);
+                int colDifference = Math.Abs(end.Col - start.Col);
+                if (rowDifference != colDifference)
+                {
+                    return false;
+                }
+            }
+            // If it's a straight move, make sure it's actually straight
+            else
+            {
+                if (start.Row != end.Row && start.Col != end.Col)
+                {
+                    return false;
+                }
+            }
+
+
+
+            int rowStep = start.Row == end.Row ? 0 : (end.Row - start.Row) / Math.Abs(end.Row - start.Row);
+            int colStep = start.Col == end.Col ? 0 : (end.Col - start.Col) / Math.Abs(end.Col - start.Col);
+
+            int currentRow = start.Row + rowStep;
+            int currentCol = start.Col + colStep;
+
+
+            // Check each square between start and end (exclusive)
+            while (currentRow != end.Row || currentCol != end.Col)
+            {
+                if (!GetPiece(new Square(currentRow, currentCol)).IsEmpty)
+                {
+                    return false;  // Path is blocked
+                }
+                currentRow += rowStep;
+                currentCol += colStep;
+            }
+            return true;  // Path is clear
+        }
+
         public void InitBoard() //todo change all the hardcoded numbers to consts.
         {
 

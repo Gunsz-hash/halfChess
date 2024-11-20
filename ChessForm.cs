@@ -59,7 +59,7 @@ namespace FinalProject
             };
 
             TimeComboBox.Items.AddRange(new object[] { 20, 40, 60});
-            TimeComboBox.SelectedIndex = 1;
+            TimeComboBox.SelectedIndex = 0;
             TimeComboBox.SelectionChangeCommitted += TimeComboBox_SelectionChanged;
             this.Controls.Add(TimeComboBox);
 
@@ -148,6 +148,11 @@ namespace FinalProject
         {
             int selectedTime = (int)TimeComboBox.SelectedItem;
             game.SetTimeLimit(selectedTime);
+        }
+
+        public void DisableTimeSelection()
+        {
+            TimeComboBox.Enabled = false;
         }
 
 

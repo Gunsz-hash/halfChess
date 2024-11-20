@@ -123,6 +123,7 @@ namespace FinalProject
                         {
                             gameTimer.Start();
                             isFirstMove = false;
+                            form.DisableTimeSelection();
                         }
                     }
                 }
@@ -137,8 +138,8 @@ namespace FinalProject
 
                     // the case which the move was successful
                     gameTimer.Stop();
-                    form.ResetBoardColors();
-                    
+                    //form.ResetBoardColors();
+
 
                     //check if the game end
                     if (IsCheckmate())
@@ -150,15 +151,17 @@ namespace FinalProject
 
                     }
 
-                    else if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
-                    {
-                        MessageBox.Show("Check!"); //do we need it?
-                        SwitchTurn();
-                    }
 
                     else
                     {
+                        bool isInCheck = IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing);
+                        if (isInCheck)
+                        {
+                            MessageBox.Show("Check!");
+                        }
+                        updateUI(board, isWhiteTurn, timeLeft, isInCheck);
                         SwitchTurn();
+
                     }
                 }
                 else
@@ -167,13 +170,20 @@ namespace FinalProject
                     form.ResetBoardColors();
                     SelectedPiece = new EmptyPiece(null);
                     clickedFirst = false;
-                   
+
+                    // Check if we're in check after an invalid move
+                    bool currentlyInCheck = IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing);
+                    updateUI(board, isWhiteTurn, timeLeft, currentlyInCheck);
+
                 }
                
                 
             }
+
+            /*King currentKing = isWhiteTurn ? board.whiteKing : board.blackKing;
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(currentKing));*/
             //why that function isnt used?
-            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+           // updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
 
         }
 
@@ -225,7 +235,7 @@ namespace FinalProject
                 {
                     if (mainPiece.IsValidMove(start, end, board)) //if this square can be accessed 
                     {
-                        if (IsInCheck(mainPiece))
+                        if (IsInCheck(mainPiece)) //if already in check
                         {
                             if (CanAvoidCheck(start, end))
                             {
@@ -236,6 +246,7 @@ namespace FinalProject
                             else
                             {
                                 MessageBox.Show("Invalid move! You cannot leave your king in check.");
+                                updateUI(board, isWhiteTurn, timeLeft, true);
                                 return false;
                             }
 
@@ -243,11 +254,21 @@ namespace FinalProject
                         else
                         {
                             Move(start, end);
+
+                            if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
+                            {
+                                Move(end, start);
+                                MessageBox.Show("Invalid move! This would put you in check.");
+                                // Update UI to show the check state
+                                updateUI(board, isWhiteTurn, timeLeft, true);
+                                return false;
+                            }
+
+
                             //ResetBoardColors();
                             return true;
                         }
                     }
-                    
                 }
 
 

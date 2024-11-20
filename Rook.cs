@@ -12,19 +12,17 @@ namespace FinalProject
 
         public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
-            int rowDiffernce = Math.Abs(endPoint.Row - startPoint.Row);
-            int colDiffernce = Math.Abs(endPoint.Col - startPoint.Col);
-            
-            
-            if ((rowDiffernce != 0 && colDiffernce == 0) || (colDiffernce != 0 && rowDiffernce == 0))
-            {
-                return true;
-            }
+            int rowDifference = Math.Abs(endPoint.Row - startPoint.Row);
+            int colDifference = Math.Abs(endPoint.Col - startPoint.Col);
 
-            else // row and cols are changes
+            // Must move either horizontally or vertically (not both)
+            if ((rowDifference != 0 && colDifference != 0) || (rowDifference == 0 && colDifference == 0))
             {
                 return false;
             }
+
+            // Check if path is clear (false for straight line check)
+            return board.IsPathClear(startPoint, endPoint, false);
         }
 
 
