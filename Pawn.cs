@@ -22,6 +22,7 @@ namespace FinalProject
             //need to check for a piece(if its a capture or a move:
             Piece target = board.GetPiece(endPoint);
 
+
             if(!target.IsEmpty) // if its a capture (diagonally)
             {
                 if(rowDiffernce == 1 && colDiffernce == 1)

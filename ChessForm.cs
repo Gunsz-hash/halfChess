@@ -31,6 +31,9 @@ namespace FinalProject
         private Square checkSquare;
 
 
+
+
+
         public ChessForm()
         {
             InitializeComponent();
@@ -105,6 +108,8 @@ namespace FinalProject
         }
 
 
+
+
         private void InitializeCheckFlashTimer()
         {
             checkFlashTimer = new System.Windows.Forms.Timer();
@@ -177,6 +182,7 @@ namespace FinalProject
                     boardPanel.Controls.Add(boardButtons[row, col]);
                 }
             }
+
 
             ResetBoardColors();
             game = new Game(UpdateBoardUI);
