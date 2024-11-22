@@ -105,7 +105,7 @@ namespace FinalProject
         {
             int id = Convert.ToInt32(UserID.Value);
             string name = UserName.Text;
-            string path = "api/TblChessPlayers/getbyid/" + id + "/" + name;
+            string path = "api/ChessPlayers/getbyid/" + id + "/" + name;
             try
             {
                 var res = await GetPlayerAsync(path, id, name);
