@@ -30,9 +30,7 @@ namespace FinalProject
         private bool isFlashing;
         private Square checkSquare;
 
-
-
-
+        
 
         public ChessForm()
         {
