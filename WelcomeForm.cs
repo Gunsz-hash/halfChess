@@ -118,7 +118,7 @@ namespace FinalProject
                 else
                 {
                     UserID.ResetText();
-                    Connect.Enabled = false;
+                    //Connect.Enabled = false;
                     UserID.Refresh();
 
                     string message = "Failed to Log in";
