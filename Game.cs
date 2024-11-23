@@ -19,7 +19,7 @@ namespace FinalProject
         private bool isWhiteTurn;
         internal Piece SelectedPiece { get; set; }
         private bool clickedFirst;
-       // private Button[,] boardButtons;
+       // not sure why not here :private Button[,] boardButtons;
 
         //@
         private Timer gameTimer;
@@ -115,7 +115,7 @@ namespace FinalProject
                     if (Check1stPressValidity(SelectedPiece.Position))
                     {
                         form.HighlightSquare(SelectedPiece.Position, Color.Yellow);
-                        //optionally:
+                        //optionally, maybe add later:
                         // form.ShowValidMoves(GetValidMoves(position));
 
 
@@ -180,10 +180,7 @@ namespace FinalProject
                 
             }
 
-            /*King currentKing = isWhiteTurn ? board.whiteKing : board.blackKing;
-            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(currentKing));*/
-            //why that function isnt used?
-           // updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+            
 
         }
 
@@ -294,11 +291,11 @@ namespace FinalProject
                             Piece movingPiece = board.GetPiece(start);
                             Piece targetPiece = board.GetPiece(end);
 
-                            // Temporarily make the move
+                            // make the move tempor
                             board.SetPiece(end, movingPiece);
                             board.SetPiece(start, new EmptyPiece(start));
 
-                            // Check if this capture puts our king in check
+                            // if this capture puts our king in check
                             if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
                             {
                                 // Undo the temporary move
@@ -309,11 +306,11 @@ namespace FinalProject
                                 return false;
                             }
 
-                            // Undo the temporary move
+                            // Undotemp move
                             board.SetPiece(start, movingPiece);
                             board.SetPiece(end, targetPiece);
 
-                            // If we got here, the capture is safe, so do the actual capture
+                            // If we got here, the capture is safe, so  capture
                             Capture(start, end);
                             return true;
                         }
@@ -359,7 +356,7 @@ namespace FinalProject
                 {
                     Piece target = board.GetPiece(newPosition);
 
-                    if (target.Color != king.Color)//if not friendly
+                    if (target.Color != king.Color)//if not friedndly
                     {
                         if (CanAvoidCheck(king.Position, newPosition) || CanAvoidCheckByCapture(king.Position, newPosition))
                         {
@@ -382,7 +379,7 @@ namespace FinalProject
             // Just use SetPiece to handle the capture
             Piece movingPiece = board.GetPiece(start);
             board.SetPiece(end, movingPiece);  // Place capturing piece
-            board.SetPiece(start, new EmptyPiece(start));  // Empty original square
+            board.SetPiece(start, new EmptyPiece(start));  // Empty original sqr
         }
 
         public bool CanAvoidCheckByCapture(Square start, Square end)
@@ -573,79 +570,7 @@ namespace FinalProject
 
         }
 
-        /* public bool IsBishopThreat(King king)
-                {
-                    int[] directions = { -1, 1 };
-
-                    foreach (var dr in directions)
-                    {
-                        foreach (var dc in directions)
-                        {
-                            int row = king.Position.Row;
-                            int col = king.Position.Col;
-
-                            while(board.InBounds(row += dr, col += dc))
-                            {
-                                Square possibleBishop = new Square(row, col);
-
-
-                                if (king.IsWhite)
-                                {
-                                    if (board.GetPiece(possibleBishop).Color == PieceColor.Black)
-                                    {
-                                        if(board.GetPiece(possibleBishop).Type == PieceType.Bishop)
-                                        {
-                                            return true;
-                                        }
-
-                                        else
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    else if (board.GetPiece(possibleBishop).Color == PieceColor.White) //if its white
-                                    {
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        //ignore
-                                    }
-
-
-                                }
-                                else
-                                {
-                                    if (board.GetPiece(possibleBishop).Color == PieceColor.White)
-                                    {
-                                        if (board.GetPiece(possibleBishop).Type == PieceType.Bishop)
-                                        {
-                                            return true;
-                                        }
-
-                                        else
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    else if (board.GetPiece(possibleBishop).Color == PieceColor.Black) //if its black
-                                    {
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        //ignore
-                                    }
-                                }
-
-
-                            }
-
-                        }
-                    }
-
-                    return false;
-                }*/
+        
 
         public bool IsInCheck(Piece piece)
         {
@@ -696,22 +621,7 @@ namespace FinalProject
             Console.WriteLine("No piece can defend, its checkmate!");
 
             
-
-
-
-
-
-            //todo can other piece defend or capture, 
-            //the function that checks if someone is threathning the king (ischeck), can be used instead on the king, on the attcking op piece
-
-
-            //other piece can defend
-            /*if (CanOtherPieceDefend(king))
-            {
-                return false;
-            }*/
-
-            //no way to avoid, checkmate
+           
 
 
             return true;
@@ -814,21 +724,7 @@ namespace FinalProject
         }
 
 
-        /*public bool MakeMove(Square start, Square end)  //change the null into empty 
-        {
-            Piece piece = board.GetPiece(start);
-
-            if (piece != null && ValidTurn(piece))
-            {
-                if (board.MovePiece(start, end))
-                {
-                    SwitchTurn();
-                    return true;
-                }
-            }
-            // Print or log invalid move feedback
-            return false;
-        }*/
+        
 
 
         public bool ValidTurn(Piece piece)
@@ -842,52 +738,7 @@ namespace FinalProject
 
 
 
-        /*
-
-            if clickedPiece turn:
-
-                clickedPiece is marked, and flag raised
-
-                if(click is in reach & valid - for the currect piece):
-                    if nextClick = clickedPiece:
-                            cancel mark and, flag
-                    else if nextClick = friendlyPiece
-                            friendlyPiece marked instead
-                    else if nextClick = hostilePiece
-                            kill other piece
-                    else (empty place)
-                            move to the place
-
-                else(not in reach):
-                    if nextClick = friendlyPiece
-                            friendlyPiece marked instead
-
-               else:
-                print "not your turn"
-
-
-
-         */
-
-
-        //is check
-        //check var
-        //can king escape?
-        //is checkmate
-
-        //capture
-        //can capture (if not in check)
-
-        //isgameover(reset for a new board)
-
-        //switch turn
-        //get turn
-
-
-        //make move
-
-        //can move?
-
+       
 
 
 

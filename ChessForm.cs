@@ -92,7 +92,7 @@ namespace FinalProject
             };
             this.Controls.Add(timerLabel);
 
-            boardPanel = new Panel  // Store the panel reference
+            boardPanel = new Panel  // Store the panel ref
             {
                 Location = new Point(BOARD_MARGIN, BOARD_MARGIN + 40),
                 Size = new Size(BUTTON_SIZE * 4, BUTTON_SIZE * 8),

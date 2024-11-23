@@ -39,11 +39,6 @@ namespace FinalProject
         }
 
 
-        // function that checks whether if king is checked 
-        // function that checks if in the next move the king is still checked and if so reverse the move
-
-
-
 
 
     }

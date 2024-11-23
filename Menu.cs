@@ -22,6 +22,7 @@ namespace FinalProject
 
         private void Menu_Load(object sender, EventArgs e)
         {
+            //if we gonna add details about player
 /*            Labels_Load(); // player name / data
 */
         }

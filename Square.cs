@@ -19,7 +19,7 @@ namespace FinalProject
 
        
 
-        //add tostring, equals, gethashcode, and so on...
+        // need to not forget to add tostring, equals, gethashcode, and so on...
 
     }
 }

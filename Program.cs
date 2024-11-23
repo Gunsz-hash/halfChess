@@ -20,15 +20,11 @@ namespace FinalProject
 
         //forms
         public static WelcomeForm welcomeForm;
-        //public static Form PreviousPage;
+       
 
         //details
         public static Game currGame;       
         public static Player player;
-
-        //DB
-        //public static MyDataClassesDataContext database;???????????????????
-
 
 
         /// <summary>
@@ -37,10 +33,7 @@ namespace FinalProject
         [STAThread]
         static void Main()
         {
-            //example for a friend;
-            //SqlConnection con = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\Users\\mark0\\source\\repos\\FinalProj_Noa_Mark\\FinalProj_Noa_Mark\\MyPrivateDB.mdf;Integrated Security=True");
-            //database = new MyDataClassesDataContext(con);
-
+            
             client.BaseAddress = new Uri(PATH);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
@@ -55,7 +48,7 @@ namespace FinalProject
             Application.Run(welcomeForm);
 
 
-
+            //maybe?:
            // Application.Run(new ChessForm());
         }
     }
