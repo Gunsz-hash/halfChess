@@ -12,54 +12,86 @@ namespace FinalProject
     internal class Game
     {
 
+        public delegate void UpdateUIDelegate(Board board, bool isWhiteTurn, int timeLeft, bool isCheck);
+        private readonly UpdateUIDelegate updateUI;  // Use our defined delegate type
+
         internal Board board;
         private bool isWhiteTurn;
-        internal Piece selectedPiece { get; set; }
+        internal Piece SelectedPiece { get; set; }
         private bool clickedFirst;
-        private Button[,] boardButtons;
+       // private Button[,] boardButtons;
 
         //@
         private Timer gameTimer;
         private int timeLeft;
-        private const int DEFAULT_TIME = 20;
+        private int timeLimit = 20; //default
 
 
         private bool isFirstMove;
+
 
         //@
 
 
         //how does a new game get created after one is finished?
 
-        public Game(Button[,] buttons)
+        public Game(UpdateUIDelegate updateUICallback)
         {
             board = new Board();
+            board.InitBoard();
             isWhiteTurn = true;
-            selectedPiece = new EmptyPiece(null);
+            SelectedPiece = new EmptyPiece(null);
             clickedFirst = false;
-            boardButtons = buttons; // init the ui buttons
             isFirstMove = true;
+            updateUI = updateUICallback;
 
-            //@
+
             InitializeTimer();
             //@
+            updateUI(board, isWhiteTurn, timeLimit, false);
         }
 
         //@
         private void InitializeTimer()
         {
-            gameTimer = new Timer();
-            gameTimer.Interval = 1000;// 1 second
+            gameTimer = new Timer
+            {
+                Interval = 1000// 1 second
+            };
             gameTimer.Tick += Timer_Tick;
-            timeLeft = DEFAULT_TIME;
+            timeLeft = timeLimit;
         }
         //@
+
+        public void SetTimeLimit(int seconds)
+        {
+            bool wasRunning = gameTimer.Enabled;
+            if (wasRunning)
+            {
+                gameTimer.Stop();
+
+            }
+
+            timeLimit = seconds;
+            timeLeft = seconds;
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+
+            if (wasRunning)
+            {
+                gameTimer.Start();
+            }
+
+        }
 
 
         //@
         private void Timer_Tick(object sender, EventArgs e)
         {
             timeLeft--;
+
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+
+
             if (timeLeft <= 0)
             {
                 gameTimer.Stop();
@@ -71,21 +103,27 @@ namespace FinalProject
         //@
 
 
-        public void HandleSquareClick(Square position, Button clickedButton)
+        public void HandleSquareClick(Square position, ChessForm form)
         {
-            if (selectedPiece.IsEmpty || clickedFirst == false)//first time clicking on a piece
+            if (SelectedPiece.IsEmpty || !clickedFirst)//first time clicking on a piece
             {
                 if (!board.GetPiece(position).IsEmpty) // if there is a piece
                 {
-                    selectedPiece = board.GetPiece(position); // select that piece
+                    SelectedPiece = board.GetPiece(position); // select that piece
                     clickedFirst = true; // approve clicked once
 
-                    if (Check1stPressValidity(selectedPiece.Position, clickedButton))
+                    if (Check1stPressValidity(SelectedPiece.Position))
                     {
+                        form.HighlightSquare(SelectedPiece.Position, Color.Yellow);
+                        //optionally:
+                        // form.ShowValidMoves(GetValidMoves(position));
+
+
                         if (isFirstMove)//the first player move starts the game
                         {
                             gameTimer.Start();
                             isFirstMove = false;
+                            form.DisableTimeSelection();
                         }
                     }
                 }
@@ -94,62 +132,76 @@ namespace FinalProject
             
             else
             {
-                if(Check2ndPressValidity(selectedPiece.Position, position, clickedButton))//if this function was true, click 2 was made
+                if(Check2ndPressValidity(SelectedPiece.Position, position))//if this function was true, click 2 was made
                 {
+                    form.ResetBoardColors();
+
                     // the case which the move was successful
                     gameTimer.Stop();
-                    
+                    //form.ResetBoardColors();
 
+                 
                     //check if the game end
                     if (IsCheckmate())
                     {
-                        string winner = isWhiteTurn ? "Black" : "White";
+                        string winner = !isWhiteTurn ? "Black" : "White";
                         MessageBox.Show($"Checkmate! {winner} wins!");
                         EndGame();
                         //reset game?
 
                     }
 
-                    else if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
-                    {
-                        MessageBox.Show("Check!"); //do we need it?
-                        SwitchTurn();
-                    }
 
                     else
                     {
+                        bool isInCheck = IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing);
+                        if (isInCheck)
+                        {
+                            MessageBox.Show("Check!");
+                        }
+                        updateUI(board, isWhiteTurn, timeLeft, isInCheck);
                         SwitchTurn();
+
                     }
                 }
                 else
                 {
                     //should really do it? check!
-                    selectedPiece = new EmptyPiece(null);
+                    form.ResetBoardColors();
+                    SelectedPiece = new EmptyPiece(null);
                     clickedFirst = false;
-                    ResetBoardColors(); 
+
+                    // Check if we're in check after an invalid move
+                    bool currentlyInCheck = IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing);
+                    updateUI(board, isWhiteTurn, timeLeft, currentlyInCheck);
+
                 }
                
                 
             }
 
+            /*King currentKing = isWhiteTurn ? board.whiteKing : board.blackKing;
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(currentKing));*/
+            //why that function isnt used?
+           // updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+
         }
 
-        public bool Check1stPressValidity(Square position,Button clickedButton)
+        public bool Check1stPressValidity(Square position)
         {
             Piece piece = board.GetPiece(position);
 
             if (board.InBounds(position))
             {
                 if (ValidTurn(piece)) //turn and piece same color
-                {
-                    clickedButton.BackColor = Color.Yellow;// highlight player   
+                {   
                     return true;
 
                 }
                 else // turn and piece opposite colors
                 {
                     MessageBox.Show("Not Your Turn");
-                    selectedPiece = new EmptyPiece(null);
+                    SelectedPiece = new EmptyPiece(null);
                     clickedFirst = false;
                     return false; //not your turn
                 }
@@ -167,94 +219,108 @@ namespace FinalProject
         {
             gameTimer.Stop();
             isFirstMove = true; //reset the first turn for the timer in first move
+            updateUI(board, isWhiteTurn, timeLeft, false);
+
+
+            //todo logic for opening the web
+
+
+            Application.Exit();
         }
 
-        public bool Check2ndPressValidity(Square start, Square end, Button clickedButton)
+        public bool Check2ndPressValidity(Square start, Square end)
         {
-
             Piece mainPiece = board.GetPiece(start);
             Piece targetSquare = board.GetPiece(end);
-
-
             if (board.InBounds(end))
             {
                 if (targetSquare.IsEmpty)
                 {
-                    if (mainPiece.IsValidMove(start, end, board)) //if this square can be accessed 
+                    if (mainPiece.IsValidMove(start, end, board))
                     {
-                        if (IsInCheck(mainPiece))
+                        if (IsInCheck(mainPiece)) //if already in check
                         {
                             if (CanAvoidCheck(start, end))
                             {
                                 Move(start, end);
-                                ResetBoardColors();
                                 return true;
                             }
                             else
                             {
                                 MessageBox.Show("Invalid move! You cannot leave your king in check.");
+                                updateUI(board, isWhiteTurn, timeLeft, true);
                                 return false;
                             }
-
                         }
                         else
                         {
                             Move(start, end);
-                            ResetBoardColors();
+                            if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
+                            {
+                                Move(end, start);
+                                MessageBox.Show("Invalid move! This would put you in check.");
+                                updateUI(board, isWhiteTurn, timeLeft, true);
+                                return false;
+                            }
                             return true;
                         }
                     }
-                    
                 }
-
-
                 else if (targetSquare.Color == mainPiece.Color) // if its a friendly piece
                 {
-                    selectedPiece = board.GetPiece(end);
-                    ResetBoardColors();
-                    clickedButton.BackColor = Color.Yellow;// highlight player   
+                    SelectedPiece = board.GetPiece(end);
                     return false;
-
                 }
-
-
-                else// enemy
+                else // enemy
                 {
-                    if (mainPiece.IsValidMove(start, end, board)) //if this square can be accessed 
+                    if (mainPiece.IsValidMove(start, end, board))
                     {
-
                         if (IsInCheck(mainPiece))
                         {
                             if (CanAvoidCheckByCapture(start, end))
                             {
                                 Capture(start, end);
-                                ResetBoardColors();
                                 return true;
                             }
                             else
                             {
-                                //if (!ischeckmate)
                                 MessageBox.Show("Invalid move! You cannot leave your king in check.");
                                 return false;
                             }
-
                         }
                         else
                         {
+                            // Test if the capture would put us in check
+                            Piece movingPiece = board.GetPiece(start);
+                            Piece targetPiece = board.GetPiece(end);
+
+                            // Temporarily make the move
+                            board.SetPiece(end, movingPiece);
+                            board.SetPiece(start, new EmptyPiece(start));
+
+                            // Check if this capture puts our king in check
+                            if (IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing))
+                            {
+                                // Undo the temporary move
+                                board.SetPiece(start, movingPiece);
+                                board.SetPiece(end, targetPiece);
+                                MessageBox.Show("Invalid capture! This would put you in check.");
+                                updateUI(board, isWhiteTurn, timeLeft, true);
+                                return false;
+                            }
+
+                            // Undo the temporary move
+                            board.SetPiece(start, movingPiece);
+                            board.SetPiece(end, targetPiece);
+
+                            // If we got here, the capture is safe, so do the actual capture
                             Capture(start, end);
-                            ResetBoardColors();
                             return true;
                         }
-
-
-
-                        //check if im in check and if i am, check if the next move blocks the check, if not - cant do
-                        //capture
                     }
                 }
             }
             return false;
-
         }
 
         public bool CanAvoidCheck(Square start, Square end)
@@ -282,20 +348,27 @@ namespace FinalProject
             int[] rowOffsets = { -1, -1, -1, 0, 0, 1, 1, 1 };
             int[] colOffsets = { -1, 0, 1, -1, 1, -1, 0, 1 };
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < Board.Rows; i++)
             {
                 int newRow = king.Position.Row + rowOffsets[i];
                 int newCol = king.Position.Col + colOffsets[i];
                 Square newPosition = new Square(newRow, newCol);
 
-                bool isFriendly = board.GetPiece(newPosition).Color == king.Color;
 
-                if (board.InBounds(newPosition) && !isFriendly)
+                if (board.InBounds(newPosition))
                 {
-                    if (CanAvoidCheck(king.Position, newPosition) || CanAvoidCheckByCapture(king.Position, newPosition))
+                    Piece target = board.GetPiece(newPosition);
+
+                    if (target.Color != king.Color)//if not friendly
                     {
-                        return true;
+                        if (CanAvoidCheck(king.Position, newPosition) || CanAvoidCheckByCapture(king.Position, newPosition))
+                        {
+                            return true;
+                        }
+
                     }
+
+
                 }
 
             }
@@ -306,11 +379,10 @@ namespace FinalProject
 
         public void Capture(Square start, Square end)
         {
-            Piece captured = board.GetPiece(end);
-            Move(start, end);
-            captured.Color = PieceColor.None;
-            captured.SetPosition(null);
-            captured.Type = PieceType.Empty;
+            // Just use SetPiece to handle the capture
+            Piece movingPiece = board.GetPiece(start);
+            board.SetPiece(end, movingPiece);  // Place capturing piece
+            board.SetPiece(start, new EmptyPiece(start));  // Empty original square
         }
 
         public bool CanAvoidCheckByCapture(Square start, Square end)
@@ -342,9 +414,6 @@ namespace FinalProject
 
             return avoided;
         }
-
-
-
 
         public void Move(Square start, Square end)
         {
@@ -581,7 +650,6 @@ namespace FinalProject
         public bool IsInCheck(Piece piece)
         {
             King king = LocateKing(piece);
-            Square kingPosition = king.Position;
 
 
             //logic if in check return true;
@@ -596,19 +664,38 @@ namespace FinalProject
         public bool IsCheckmate()
         {
             //locate current king
-            King king = isWhiteTurn ? board.whiteKing : board.blackKing;
+            King king = !isWhiteTurn ? board.whiteKing : board.blackKing;
+
+
+            Console.WriteLine($"Checking checkmate for {(isWhiteTurn ? "White" : "Black")} king");
 
             //check if king is in check
             if (!IsInCheck(king))
             {
+                Console.WriteLine("Not in Check");
                 return false;
             }
+            Console.WriteLine("King is in check");
+
+
 
             //king can avoid checkmate
             if (CanAvoidCheckmate(king))
             {
+                Console.WriteLine("King can move to safety");
                 return false;
             }
+            Console.WriteLine("King cannot avoid check");
+
+
+            if (CanOtherPieceDefend(king))
+            {
+                Console.WriteLine("Another Piece can defend the king");
+                return false;
+            }
+            Console.WriteLine("No piece can defend, its checkmate!");
+
+            
 
 
 
@@ -619,10 +706,10 @@ namespace FinalProject
 
 
             //other piece can defend
-            if (CanOtherPieceDefend(king))
+            /*if (CanOtherPieceDefend(king))
             {
                 return false;
-            }
+            }*/
 
             //no way to avoid, checkmate
 
@@ -630,7 +717,77 @@ namespace FinalProject
             return true;
         }
 
-        
+        //todo : i think we can get much more efficient than 4 nested loops by using another DSA, should check that if we have time
+        public bool CanOtherPieceDefend(King king)
+        {
+            //get the friendly pieces
+            
+            for(int row = 0; row < Board.Rows; row++)
+            {
+                for(int col = 0; col < Board.Columns; col++)
+                {
+                    Piece defendingPiece = board.GetPiece(new Square(row, col));
+
+
+                    //if friendly (and not empty/king too)
+                    if(!defendingPiece.IsEmpty && defendingPiece.Color == king.Color && defendingPiece.Type != PieceType.King)
+                    {
+
+                        //try every possible square on the board
+                        for(int targetRow = 0; targetRow < Board.Rows; targetRow++)
+                        {
+                            for(int targetCol = 0; targetCol < Board.Columns; targetCol++)
+                            {
+                                Square targetSquare = new Square(targetRow, targetCol);
+                                Piece targetPiece = board.GetPiece(targetSquare);
+
+
+                                //if the move it valid
+                                if (defendingPiece.IsValidMove(defendingPiece.Position, targetSquare, board))
+                                {
+                                    // Store original positions and pieces
+                                    Square defenderOriginalPos = defendingPiece.Position;
+                                    Piece targetOriginalPiece = targetPiece;
+
+                                    // Make the move/capture
+                                    board.SetPiece(targetSquare, defendingPiece);
+                                    board.SetPiece(defenderOriginalPos, new EmptyPiece(defenderOriginalPos));
+
+                                    // Check if this move prevents check
+                                    bool stillInCheck = IsInCheck(king);
+
+                                    // Restore the original board state
+                                    board.SetPiece(defenderOriginalPos, defendingPiece);
+                                    board.SetPiece(targetSquare, targetOriginalPiece);
+
+                                    // If we found a defending move
+                                    if (!stillInCheck)
+                                    {
+                                        Console.WriteLine($"Defense found: {defendingPiece.Type} can " +
+                                            (targetOriginalPiece.IsEmpty ? "move to" : "capture at") +
+                                            $" {targetRow},{targetCol}");
+                                        return true;
+                                    }
+
+
+
+                                }
+
+
+
+                            }
+                        }
+
+                    }
+
+
+                }
+            }
+            Console.WriteLine("No defensive moves or captures found");
+            return false;
+        }
+
+
 
 
         public King LocateKing(Piece piece)
@@ -650,9 +807,10 @@ namespace FinalProject
         {
             isWhiteTurn = !isWhiteTurn;
             clickedFirst = false;
-            selectedPiece = new EmptyPiece(null);
-            timeLeft = DEFAULT_TIME;
+            SelectedPiece = new EmptyPiece(null);
+            timeLeft = timeLimit;
             gameTimer.Start();
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
         }
 
 

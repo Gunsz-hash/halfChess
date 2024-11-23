@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FinalProject
 {
-    internal class Knight : Piece
+    public class Knight : Piece
     {
         public Knight(PieceColor color, Square position) : base(color, PieceType.Knight, position) { }
 

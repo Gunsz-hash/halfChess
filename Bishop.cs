@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProject
 {
-    internal class Bishop : Piece
+    public class Bishop : Piece
     {
 
 
@@ -16,18 +16,17 @@ namespace FinalProject
 
         public override bool IsValidMove(Square startPoint, Square endPoint, Board board)
         {
-            int rowDiffernce = Math.Abs(endPoint.Row - startPoint.Row);
-            int colDiffernce = Math.Abs(endPoint.Col - startPoint.Col);
+            int rowDifference = Math.Abs(endPoint.Row - startPoint.Row);
+            int colDifference = Math.Abs(endPoint.Col - startPoint.Col);
 
-            if (rowDiffernce != colDiffernce || rowDiffernce == 0 || colDiffernce == 0)
+            // Must move diagonally
+            if (rowDifference != colDifference || rowDifference == 0)
             {
                 return false;
             }
 
-            else //assuming the board is empty
-            {
-                return true;
-            }
+            // Check if path is clear (true for diagonal check)
+            return board.IsPathClear(startPoint, endPoint, true);
 
 
 

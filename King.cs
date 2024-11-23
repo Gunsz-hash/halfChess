@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinalProject
 {
-    internal class King : Piece
+    public class King : Piece
     {
         public King(PieceColor color, Square position) : base(color, PieceType.King, position) { }
 
