@@ -118,6 +118,14 @@ namespace FinalProject
             };
             this.Controls.Add(boardPanel);
 
+            Button clearDrawingsButton = new Button
+            {
+                Text = "Clear Drawings",
+                Location = new Point(BOARD_MARGIN + 280, BOARD_MARGIN + 200),
+                Size = new Size(100, 30)
+            };
+            clearDrawingsButton.Click += (s, e) => ClearDrawings();
+            this.Controls.Add(clearDrawingsButton);
 
             InitializeBoard();
 
@@ -156,6 +164,16 @@ namespace FinalProject
                 this.Invalidate();
                 this.Update();
             }
+        }
+
+
+        public void ClearDrawings()
+        {
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                g.Clear(Color.Transparent);
+            }
+            boardPanel.Refresh();
         }
 
 
