@@ -28,16 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.SuspendLayout();
             // 
             // ChessForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(482, 653);  // Size for 8x4 board plus margins
+            this.ClientSize = new System.Drawing.Size(362, 531);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "ChessForm";
             this.Text = "Half Chess";
+            this.Load += new System.EventHandler(this.LoadDrawing);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.ChessForm_Paint);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ChessForm_MouseMove);
             this.ResumeLayout(false);
 
         }

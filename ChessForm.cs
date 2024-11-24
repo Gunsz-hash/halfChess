@@ -25,27 +25,45 @@ namespace FinalProject
         private Panel boardPanel;
 
 
+        //size
+        int width;
+        int height;
+
+
+
         //flashing red chess:
         private Timer checkFlashTimer;
         private bool isFlashing;
         private Square checkSquare;
 
+
+        //drawing
+        private Bitmap bitmap;
+        private int x = -100;
+        private int y = -100;
+       
         
+
+
+
+        //end of drawing
 
         public ChessForm()
         {
             InitializeComponent();
 
-            int width = (BUTTON_SIZE*4) + (BOARD_MARGIN*2) + 150;
-            int height = (BUTTON_SIZE * 8) + (BOARD_MARGIN * 3) + 60;
+            width = (BUTTON_SIZE*4) + (BOARD_MARGIN*2) + 150;
+            height = (BUTTON_SIZE * 8) + (BOARD_MARGIN * 3) + 60;
 
             this.Size = new Size(width, height);
-            this.MinimumSize = this.Size;
+            this.MinimumSize = this.Size; 
 
             this.Size = new Size(BUTTON_SIZE * 6, BUTTON_SIZE * 9);
             InitializeComponents();
 
             InitializeCheckFlashTimer();
+
+           
 
         }
 
@@ -104,6 +122,50 @@ namespace FinalProject
             InitializeBoard();
 
         }
+
+
+        //drawing
+
+
+
+
+        private void LoadDrawing(Object sender, EventArgs e)
+        {
+              bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+
+        }
+
+        private void ChessForm_Paint(object sender, PaintEventArgs e)
+        {
+            this.DoubleBuffered = true;
+            const int SIZE = 10;
+            Graphics g = Graphics.FromImage(bitmap);
+            g.FillEllipse(Brushes.Red, x -SIZE/2, y-SIZE/2, SIZE, SIZE);
+            e.Graphics.DrawImage(bitmap, 0,0);
+
+
+            g.Dispose();
+        }
+
+        private void ChessForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(e.Button == MouseButtons.Right)
+            {
+                x = e.X;
+                y = e.Y;
+                this.Invalidate();
+                this.Update();
+            }
+        }
+
+
+
+        //end of drawing
+
+
+
+
+
 
 
 
@@ -339,9 +401,6 @@ namespace FinalProject
             }
         }
 
-
-       
-
         private string GetPieceSymbol(Piece piece)
         {
             if (piece == null || piece.IsEmpty) return "";
@@ -357,5 +416,6 @@ namespace FinalProject
             }
         }
 
+       
     }
 }
