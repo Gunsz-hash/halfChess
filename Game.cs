@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.CodeDom.Compiler;
 using System.Drawing;
 using System.Windows.Forms;
+using FinalProject.Models;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace FinalProject
 {
@@ -212,11 +215,15 @@ namespace FinalProject
 
         }
 
-        private void EndGame()
+        private async void EndGame()
         {
             gameTimer.Stop();
             isFirstMove = true; //reset the first turn for the timer in first move
             updateUI(board, isWhiteTurn, timeLeft, false);
+
+           
+            //num games incrementing
+            await IncGames();
 
 
             //todo logic for opening the web
@@ -224,6 +231,48 @@ namespace FinalProject
 
             Application.Exit();
         }
+
+      
+
+        public class GameUpdateResponse
+        {
+            public string message { get; set; }
+            public int currentGames { get; set; }
+        }
+
+        private async Task IncGames()
+        {
+            int id = Convert.ToInt32(Program.player.UserId);
+            string path = $"api/TblChessPlayers/incGames/{id}";
+            try
+            {
+                // Add empty content (for PUT)
+                var emptyContent = new StringContent("", Encoding.UTF8, "application/json");
+
+                var response = await Program.client.PutAsync(path, emptyContent);
+
+                // Read response content 
+                string responseContent = await response.Content.ReadAsStringAsync();
+               
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonConvert.DeserializeObject<GameUpdateResponse>(responseContent);
+                    Program.player.NumOfGames = result.currentGames;
+                    
+                }
+                else
+                {
+                    string message = $"Failed to update games(inc). Status: {response.StatusCode}. Message: {responseContent}";
+                    MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Exception: {ex.Message}");
+            }
+        }
+
 
         public bool Check2ndPressValidity(Square start, Square end)
         {
