@@ -45,7 +45,7 @@ namespace FinalProject
 
             welcomeForm = new WelcomeForm();
             player = new Player();
-            Application.Run(welcomeForm);
+            Application.Run(welcomeForm);// - problem with form
 
 
             //maybe?:
