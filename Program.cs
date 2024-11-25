@@ -48,7 +48,7 @@ namespace FinalProject
             Application.Run(welcomeForm);// - problem with form
 
 
-            //maybe?:
+            //for checking:
            // Application.Run(new ChessForm());
         }
     }

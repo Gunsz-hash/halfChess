@@ -47,7 +47,7 @@ namespace FinalProject
 
 
 
-        //end of drawing
+        //end of drawing (not working)
 
         public ChessForm()
         {
@@ -111,7 +111,7 @@ namespace FinalProject
             };
             this.Controls.Add(timerLabel);
 
-            boardPanel = new Panel  // Store the panel ref
+            boardPanel = new Panel  // store the panel ref
             {
                 Location = new Point(BOARD_MARGIN, BOARD_MARGIN + 40),
                 Size = new Size(BUTTON_SIZE * 4, BUTTON_SIZE * 8),
@@ -133,9 +133,7 @@ namespace FinalProject
         }
 
 
-        //drawing
-
-
+        //drawing - not working yet!!!!!!!!!!!!!!!!
 
 
         private void LoadDrawing(Object sender, EventArgs e)
@@ -273,6 +271,8 @@ namespace FinalProject
         }
 
 
+
+        //not in use because we got confused -  we need to fix it for future upgrades
         public void AnimatePieceMove(Square start, Square end, Action onComplete = null)
         {
             Button startButton = boardButtons[start.Row, start.Col];
@@ -301,13 +301,13 @@ namespace FinalProject
 
             try
             {
-                // Update timer
+                // update timer
                 timerLabel.Text = $"Time: {timeLeft}";
 
-                // Update turn label
+                // Update turn
                 turnLabel.Text = $"Turn: {(isWhiteTurn ? "White" : "Black")}";
 
-                // Update pieces
+                // update the pieces
                 for (int row = 0; row < Board.Rows; row++)
                 {
                     for (int col = 0; col < Board.Columns; col++)
@@ -326,7 +326,7 @@ namespace FinalProject
                     }
                 }
 
-                // If in check, highlight the king
+                // if in check, highlight the king
                 if (isCheck)
                 {
                     King kingInCheck = isWhiteTurn ? board.whiteKing : board.blackKing;
@@ -370,6 +370,7 @@ namespace FinalProject
         }
 
 
+        //override it ( read online) - and stop the flashing timer (not in use)
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             if (checkFlashTimer != null)
@@ -383,7 +384,7 @@ namespace FinalProject
 
         public void HighlightSquare(Square position, Color color)
         {
-            // Ensure position is valid
+            // if position valid
             if (position.Row >= 0 && position.Row < Board.Rows &&
                 position.Col >= 0 && position.Col < Board.Columns)
             {
@@ -392,7 +393,7 @@ namespace FinalProject
         }
 
 
-        // Method to show valid moves by highlighting them
+        // Method to show valid moves by highlighting them - for future upgrades / ignore that arnon :D
         public void ShowValidMoves(List<Square> validMoves)
         {
             foreach (Square move in validMoves)

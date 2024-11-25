@@ -17,7 +17,7 @@ namespace FinalProject
 
 
         public Board(int rows, int cols)
-        {
+        {//for future use (for other sizes of boards)
             squares = new Piece[rows, cols];
             InitBoard();
         }
@@ -74,7 +74,7 @@ namespace FinalProject
             return true;  // Path is clear
         }
 
-        public void InitBoard() //todo change all the hardcoded numbers to consts.
+        public void InitBoard() 
         {
 
 
@@ -128,7 +128,7 @@ namespace FinalProject
             if(InBounds(position))
             {
                 squares[position.Row, position.Col] = piece;
-                //if(piece != null)  // might be, todo
+                
                 piece.SetPosition(position);
             }
         }

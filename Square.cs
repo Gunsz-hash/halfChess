@@ -17,9 +17,7 @@ namespace FinalProject
             Col = col;
         }
 
-       
-
-        // need to not forget to add tostring, equals, gethashcode, and so on...
+      
 
     }
 }

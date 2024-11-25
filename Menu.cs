@@ -15,7 +15,7 @@ namespace FinalProject
     public partial class Menu : Form
     {
 
-        private const string PATH = "api/TblChessPlayers";
+       // private const string PATH = "api/TblChessPlayers"; for checking, currently we get the path from the "caller"
 
         public Menu(int id)
         {

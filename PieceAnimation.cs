@@ -14,7 +14,7 @@ namespace FinalProject
         private Button pieceButton;
         private Point startPosition;
         private Point endPosition;
-        private int steps = 15; // Number of steps in animation
+        private int steps = 15; //num of steps
         private int currentStep = 0;
         private Action onAnimationComplete;
 
@@ -23,14 +23,14 @@ namespace FinalProject
             pieceButton = button;
             animationTimer = new Timer
             {
-                Interval = 20 // 20ms between frames
+                Interval = 20 // times bwtween frames (made it 20 because of stuttering)
             };
             animationTimer.Tick += AnimationTimer_Tick;
         }
 
         public void AnimateMove(Point start, Point end, Action onComplete = null)
         {
-            if (animationTimer.Enabled) return; // Don't start if already animating
+            if (animationTimer.Enabled) return; //if animating - dont redo it
 
             startPosition = start;
             endPosition = end;
@@ -45,7 +45,7 @@ namespace FinalProject
 
             if (currentStep <= steps)
             {
-                // Calculate new position using easing function
+                // calculate the new positiomnm
                 double progress = (double)currentStep / steps;
                 double easedProgress = EaseInOutQuad(progress);
 
@@ -63,7 +63,7 @@ namespace FinalProject
             }
         }
 
-        // Smooth easing function for better animation feel
+        //smoothing the animation - we couldnt do it properly, so we tried using gpt for it, it works somehow
         private double EaseInOutQuad(double t)
         {
             return t < 0.5 ? 2 * t * t : 1 - Math.Pow(-2 * t + 2, 2) / 2;

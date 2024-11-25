@@ -23,7 +23,7 @@ namespace FinalProject
             Piece target = board.GetPiece(endPoint);
 
 
-            if(!target.IsEmpty) // if its a capture (diagonally)
+            if(!target.IsEmpty) // if its a capture (diagnonally)
             {
                 if(rowDiffernce == 1 && colDiffernce == 1)
                 {

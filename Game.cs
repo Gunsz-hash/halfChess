@@ -16,41 +16,40 @@ namespace FinalProject
     {
 
         public delegate void UpdateUIDelegate(Board board, bool isWhiteTurn, int timeLeft, bool isCheck);
-        private readonly UpdateUIDelegate updateUI;  // Use our defined delegate type
 
+        private readonly UpdateUIDelegate updateUI;  // readonly fkor better practice, 
+        
+        //logic
         internal Board board;
         private bool isWhiteTurn;
         internal Piece SelectedPiece { get; set; }
         private bool clickedFirst;
-       // not sure why not here :private Button[,] boardButtons;
-
-        //@
+       
+        //timing
         private Timer gameTimer;
         private int timeLeft;
         private int timeLimit = 20; //default
 
-
+        //game start
         private bool isFirstMove;
 
-
-
+        //animations
         private Timer animationTimer;
         private int animationSteps = 0;
-        private Square animationStart;
-        private Square animationEnd;
         private Point startPos;
         private Point endPos;
 
 
-        //@
+        
+        //how does a new game get created after one is finished? - keep it for future upgrades
 
 
-        //how does a new game get created after one is finished?
+        //ctor
 
         public Game(UpdateUIDelegate updateUICallback)
         {
             board = new Board();
-            board.InitBoard();
+            board.InitBoard(); //in any way we call it even when its in the ctor, because it made a few problem.         if it works dont touch it ;)
             isWhiteTurn = true;
             SelectedPiece = new EmptyPiece(null);
             clickedFirst = false;
@@ -59,11 +58,15 @@ namespace FinalProject
 
 
             InitializeTimer();
-            //@
+           
+            //first initialization
             updateUI(board, isWhiteTurn, timeLimit, false);
         }
 
-        //@
+        
+
+        //game timer
+
         private void InitializeTimer()
         {
             gameTimer = new Timer
@@ -73,8 +76,21 @@ namespace FinalProject
             gameTimer.Tick += Timer_Tick;
             timeLeft = timeLimit;
         }
-        //@
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            timeLeft--;
 
+            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+
+
+            if (timeLeft <= 0)
+            {
+                gameTimer.Stop();
+                string winner = isWhiteTurn ? "Black" : "White";
+                MessageBox.Show($"Time's up! {winner} wins!");//why?
+                EndGame();
+            }
+        }
         public void SetTimeLimit(int seconds)
         {
             bool wasRunning = gameTimer.Enabled;
@@ -96,24 +112,9 @@ namespace FinalProject
         }
 
 
-        //@
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            timeLeft--;
-
-            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
-
-
-            if (timeLeft <= 0)
-            {
-                gameTimer.Stop();
-                string winner = isWhiteTurn ? "Black" : "White";
-                MessageBox.Show($"Time's up! {winner} wins!");//why?
-                EndGame();
-            }
-        }
-        //@
-
+        
+      
+        //clicks and validations (move and then cap)
 
         public void HandleSquareClick(Square position, ChessForm form)
         {
@@ -224,65 +225,6 @@ namespace FinalProject
 
         }
 
-        private async void EndGame()
-        {
-            gameTimer.Stop();
-            isFirstMove = true; //reset the first turn for the timer in first move
-            updateUI(board, isWhiteTurn, timeLeft, false);
-
-           
-            //num games incrementing
-            await IncGames();
-
-
-            //todo logic for opening the web
-
-
-            Application.Exit();
-        }
-
-      
-
-        public class GameUpdateResponse
-        {
-            public string message { get; set; }
-            public int currentGames { get; set; }
-        }
-
-        private async Task IncGames()
-        {
-            int id = Convert.ToInt32(Program.player.UserId);
-            string path = $"api/TblChessPlayers/incGames/{id}";
-            try
-            {
-                // Add empty content (for PUT)
-                var emptyContent = new StringContent("", Encoding.UTF8, "application/json");
-
-                var response = await Program.client.PutAsync(path, emptyContent);
-
-                // Read response content 
-                string responseContent = await response.Content.ReadAsStringAsync();
-               
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonConvert.DeserializeObject<GameUpdateResponse>(responseContent);
-                    Program.player.NumOfGames = result.currentGames;
-                    
-                }
-                else
-                {
-                    string message = $"Failed to update games(inc). Status: {response.StatusCode}. Message: {responseContent}";
-                    MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Exception: {ex.Message}");
-            }
-        }
-
-
         public bool Check2ndPressValidity(Square start, Square end)
         {
             Piece mainPiece = board.GetPiece(start);
@@ -378,6 +320,76 @@ namespace FinalProject
             return false;
         }
 
+
+
+        //checking for moves and moving
+
+        //if not animation needed:
+
+
+
+        //public void Move(Square start, Square end)
+        //{
+        //    Piece OriginalStartPiece = board.GetPiece(start);
+
+        //    board.SetPiece(end, OriginalStartPiece);
+        //    board.SetPiece(start, new EmptyPiece(null));
+        //}
+
+
+
+        //public void Capture(Square start, Square end)
+        //{
+        //    // Just use SetPiece to handle the capture
+        //    Piece movingPiece = board.GetPiece(start);
+        //    board.SetPiece(end, movingPiece);  // Place capturing piece
+        //    board.SetPiece(start, new EmptyPiece(start));  // Empty original sqr
+        //}
+
+
+        //if animation needed:
+
+
+        public void Move(Square start, Square end)
+        {
+            // save original piece and tempor move
+            Piece OriginalStartPiece = board.GetPiece(start);
+            board.SetPiece(end, OriginalStartPiece);
+            board.SetPiece(start, new EmptyPiece(null));
+
+            //buttons for the animation
+            Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
+            Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
+            startPos = startButton.Location;
+            endPos = endButton.Location;
+
+            // animation timer and starting it
+            animationTimer = new Timer();
+            animationTimer.Interval = 20;
+            animationSteps = 0;
+            animationTimer.Tick += (sender, e) => {
+                animationSteps++;
+
+                if (animationSteps <= 15) 
+                {
+                    double progress = (double)animationSteps / 15;
+                    int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
+                    int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+
+                    startButton.Location = new Point(newX, newY);
+                }
+                else
+                {
+                    // animation complete
+                    animationTimer.Stop();
+                    startButton.Location = startPos; // reset button pos
+                    updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+                }
+            };
+
+            animationTimer.Start();
+        }
+
         public bool CanAvoidCheck(Square start, Square end)
         {
             Piece OriginalStartPiece = board.GetPiece(start);
@@ -398,6 +410,80 @@ namespace FinalProject
             return avoided;
         }
 
+
+
+        public void Capture(Square start, Square end)
+        {
+            // save original piece and tempor capture
+            Piece movingPiece = board.GetPiece(start);
+            board.SetPiece(end, movingPiece);  //capturing piece
+            board.SetPiece(start, new EmptyPiece(start));  // empty original sqr
+
+            //buttons for the animation
+            Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
+            Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
+            startPos = startButton.Location;
+            endPos = endButton.Location;
+
+            //  animation timer and starting it
+            animationTimer = new Timer();
+            animationTimer.Interval = 20;
+            animationSteps = 0;
+            animationTimer.Tick += (sender, e) => {
+                animationSteps++;
+
+                if (animationSteps <= 15)
+                {
+                    double progress = (double)animationSteps / 15;
+                    int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
+                    int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+
+                    startButton.Location = new Point(newX, newY);
+                }
+                else
+                {
+                    // animation complete
+                    animationTimer.Stop();
+                    startButton.Location = startPos; // reset button pos
+                    updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+                }
+            };
+
+            animationTimer.Start();
+        }
+
+        public bool CanAvoidCheckByCapture(Square start, Square end)
+        {
+            Piece capturedOriginal = board.GetPiece(end);
+            Piece captured = board.GetPiece(end);
+
+            Piece OriginalStartPiece = board.GetPiece(start);
+            Piece OriginalEndPiece = board.GetPiece(end);
+
+
+            //DO THE MOVE
+            board.SetPiece(end, OriginalStartPiece);
+            board.SetPiece(start, new EmptyPiece(null)); //isnt that the function move?
+            captured.Color = PieceColor.None;
+            captured.SetPosition(null);
+            captured.Type = PieceType.Empty;
+
+            //if avoided
+            bool avoided = !IsInCheck(OriginalStartPiece);
+
+            //undo move
+            board.SetPiece(start, OriginalStartPiece);
+            board.SetPiece(end, OriginalEndPiece);
+
+            captured.Color = capturedOriginal.Color;
+            captured.SetPosition(capturedOriginal.Position);
+            captured.Type = capturedOriginal.Type;
+
+            return avoided;
+        }
+
+
+        //avoiding checkmate
         public bool CanAvoidCheckmate(King king)
         {
             int[] rowOffsets = { -1, -1, -1, 0, 0, 1, 1, 1 };
@@ -431,272 +517,131 @@ namespace FinalProject
             return false; // No legal moves for the king
         }
 
-
-
-
-
-
-
-
-
-        public void Capture(Square start, Square end)
+        //todo : i think we can get much more efficient than 4 nested loops by using another DSA, should check that if we have time
+        public bool CanOtherPieceDefend(King king)
         {
-            // Store pieces and do the capture first
-            Piece movingPiece = board.GetPiece(start);
-            board.SetPiece(end, movingPiece);  // Place capturing piece
-            board.SetPiece(start, new EmptyPiece(start));  // Empty original sqr
+            //get the friendly pieces
 
-            // Get the button positions for animation
-            Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
-            Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
-            startPos = startButton.Location;
-            endPos = endButton.Location;
-
-            // Create and start animation timer
-            animationTimer = new Timer();
-            animationTimer.Interval = 20;
-            animationSteps = 0;
-            animationTimer.Tick += (sender, e) => {
-                animationSteps++;
-
-                if (animationSteps <= 15)
+            for (int row = 0; row < Board.Rows; row++)
+            {
+                for (int col = 0; col < Board.Columns; col++)
                 {
-                    double progress = (double)animationSteps / 15;
-                    int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
-                    int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+                    Piece defendingPiece = board.GetPiece(new Square(row, col));
 
-                    startButton.Location = new Point(newX, newY);
-                }
-                else
-                {
-                    // Animation complete
-                    animationTimer.Stop();
-                    startButton.Location = startPos; // Reset button position
-                    updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
-                }
-            };
 
-            animationTimer.Start();
+                    //if friendly (and not empty/king too)
+                    if (!defendingPiece.IsEmpty && defendingPiece.Color == king.Color && defendingPiece.Type != PieceType.King)
+                    {
+
+                        //try every possible square on the board
+                        for (int targetRow = 0; targetRow < Board.Rows; targetRow++)
+                        {
+                            for (int targetCol = 0; targetCol < Board.Columns; targetCol++)
+                            {
+                                Square targetSquare = new Square(targetRow, targetCol);
+                                Piece targetPiece = board.GetPiece(targetSquare);
+
+
+                                //if the move it valid
+                                if (defendingPiece.IsValidMove(defendingPiece.Position, targetSquare, board))
+                                {
+                                    // Store original positions and pieces
+                                    Square defenderOriginalPos = defendingPiece.Position;
+                                    Piece targetOriginalPiece = targetPiece;
+
+                                    // Make the move/capture
+                                    board.SetPiece(targetSquare, defendingPiece);
+                                    board.SetPiece(defenderOriginalPos, new EmptyPiece(defenderOriginalPos));
+
+                                    // check if move prevents check
+                                    bool stillInCheck = IsInCheck(king);
+
+                                    // Restore original board 
+                                    board.SetPiece(defenderOriginalPos, defendingPiece);
+                                    board.SetPiece(targetSquare, targetOriginalPiece);
+
+                                    // If we found defending move
+                                    if (!stillInCheck)
+                                    {
+                                        Console.WriteLine($"Defense found: {defendingPiece.Type} can " +
+                                            (targetOriginalPiece.IsEmpty ? "move to" : "capture at") +
+                                            $" {targetRow},{targetCol}");
+                                        return true;
+                                    }
+
+
+
+                                }
+
+
+
+                            }
+                        }
+
+                    }
+
+
+                }
+            }
+            Console.WriteLine("No defensive moves or captures found");
+            return false;
         }
 
+        //checking for check/checkmate
 
-
-
-
-
-
-
-
-
-        //public void Capture(Square start, Square end)
-        //{
-        //    // Store the moving piece
-        //    Piece movingPiece = board.GetPiece(start);
-
-        //    // Setup animation
-        //    animationStart = start;
-        //    animationEnd = end;
-        //    animationSteps = 0;
-
-        //    // Get the button positions
-        //    Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
-        //    Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
-        //    startPos = startButton.Location;
-        //    endPos = endButton.Location;
-
-        //    // Create and start animation timer
-        //    animationTimer = new Timer();
-        //    animationTimer.Interval = 20;
-        //    animationTimer.Tick += (sender, e) => {
-        //        animationSteps++;
-
-        //        if (animationSteps <= 15)
-        //        {
-        //            double progress = (double)animationSteps / 15;
-        //            int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
-        //            int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
-
-        //            startButton.Location = new Point(newX, newY);
-        //        }
-        //        else
-        //        {
-        //            // Animation complete
-        //            animationTimer.Stop();
-        //            startButton.Location = startPos; // Reset button position
-
-        //            // Actually capture the piece
-        //            board.SetPiece(end, movingPiece);
-        //            board.SetPiece(start, new EmptyPiece(start));
-        //            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
-        //        }
-        //    };
-
-        //    animationTimer.Start();
-        //}
-
-
-
-
-
-
-
-        //public void Capture(Square start, Square end)
-        //{
-        //    // Just use SetPiece to handle the capture
-        //    Piece movingPiece = board.GetPiece(start);
-        //    board.SetPiece(end, movingPiece);  // Place capturing piece
-        //    board.SetPiece(start, new EmptyPiece(start));  // Empty original sqr
-        //}
-
-        public bool CanAvoidCheckByCapture(Square start, Square end)
+        public bool IsInCheck(Piece piece)
         {
-            Piece capturedOriginal = board.GetPiece(end);
-            Piece captured = board.GetPiece(end);
+            King king = LocateKing(piece);
 
-            Piece OriginalStartPiece = board.GetPiece(start);
-            Piece OriginalEndPiece = board.GetPiece(end);
-
-
-            //DO THE MOVE
-            board.SetPiece(end, OriginalStartPiece);
-            board.SetPiece(start, new EmptyPiece(null)); //isnt that the function move?
-            captured.Color = PieceColor.None;
-            captured.SetPosition(null);
-            captured.Type = PieceType.Empty;
-
-            //if avoided
-            bool avoided = !IsInCheck(OriginalStartPiece);
-
-            //undo move
-            board.SetPiece(start, OriginalStartPiece);
-            board.SetPiece(end, OriginalEndPiece);
-
-            captured.Color = capturedOriginal.Color;
-            captured.SetPosition(capturedOriginal.Position);
-            captured.Type = capturedOriginal.Type;
-
-            return avoided;
+            return (IsPawnThreat(king) || IsKnightThreat(king) || IsBishopThreat(king) || IsRookThreat(king));
         }
-
-
-
-
-
-
-
-        public void Move(Square start, Square end)
+        public bool IsCheckmate()
         {
-            // Store original piece and do the move first
-            Piece OriginalStartPiece = board.GetPiece(start);
-            board.SetPiece(end, OriginalStartPiece);
-            board.SetPiece(start, new EmptyPiece(null));
 
-            // Get the button positions for animation
-            Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
-            Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
-            startPos = startButton.Location;
-            endPos = endButton.Location;
+            //locate current king
+            King king = !isWhiteTurn ? board.whiteKing : board.blackKing;
 
-            // Create and start animation timer
-            animationTimer = new Timer();
-            animationTimer.Interval = 20;
-            animationSteps = 0;
-            animationTimer.Tick += (sender, e) => {
-                animationSteps++;
 
-                if (animationSteps <= 15)
-                {
-                    double progress = (double)animationSteps / 15;
-                    int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
-                    int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
 
-                    startButton.Location = new Point(newX, newY);
-                }
-                else
-                {
-                    // Animation complete
-                    animationTimer.Stop();
-                    startButton.Location = startPos; // Reset button position
-                    updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
-                }
-            };
 
-            animationTimer.Start();
+            //check if king is in check
+            if (!IsInCheck(king))
+            {
+
+                return false;
+            }
+
+
+
+
+            //king can avoid checkmate
+            if (CanAvoidCheckmate(king))
+            {
+
+                return false;
+            }
+
+
+
+            if (CanOtherPieceDefend(king))
+            {
+
+                return false;
+            }
+
+
+
+
+
+
+            return true;
         }
-
-
-
-
-
-
-        //public void Move(Square start, Square end)
-        //{
-        //    // Store the original piece
-        //    Piece originalStartPiece = board.GetPiece(start);
-
-        //    // Setup animation
-        //    animationStart = start;
-        //    animationEnd = end;
-        //    animationSteps = 0;
-
-        //    // Get the button positions
-        //    Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
-        //    Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
-        //    startPos = startButton.Location;
-        //    endPos = endButton.Location;
-
-        //    // Create and start animation timer
-        //    animationTimer = new Timer();
-        //    animationTimer.Interval = 20; // 20ms between frames
-        //    animationTimer.Tick += (sender, e) => {
-        //        animationSteps++;
-
-        //        if (animationSteps <= 15) // 15 steps total
-        //        {
-        //            // Calculate new position
-        //            double progress = (double)animationSteps / 15;
-        //            int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
-        //            int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
-
-        //            startButton.Location = new Point(newX, newY);
-        //        }
-        //        else
-        //        {
-        //            // Animation complete
-        //            animationTimer.Stop();
-        //            startButton.Location = startPos; // Reset button position
-
-        //            // Actually move the piece
-        //            board.SetPiece(end, originalStartPiece);
-        //            board.SetPiece(start, new EmptyPiece(null));
-        //            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
-        //        }
-        //    };
-
-        //    animationTimer.Start();
-        //}
-
-
-
-
-
-
-
-        //public void Move(Square start, Square end)
-        //{
-        //    Piece OriginalStartPiece = board.GetPiece(start);
-
-        //    board.SetPiece(end, OriginalStartPiece);
-        //    board.SetPiece(start, new EmptyPiece(null));
-        //}
-
-
         public bool IsRookThreat(King king)
         {
-            int[] rowDirections = { -1, 1, 0, 0 }; // Up, Down
-            int[] colDirections = { 0, 0, -1, 1 }; // Left, Right
+            int[] rowDirections = { -1, 1, 0, 0 }; // up and down
+            int[] colDirections = { 0, 0, -1, 1 }; // left and right
 
-            for (int i = 0; i < 4; i++)  // Loop through each straight-line direction
+            for (int i = 0; i < 4; i++)  // loop in the 4 directions
             {
                 int row = king.Position.Row;
                 int col = king.Position.Col;
@@ -706,13 +651,13 @@ namespace FinalProject
                     Square possibleRook = new Square(row, col);
                     Piece piece = board.GetPiece(possibleRook);
 
-                    // Check if it's an opponent's rook
+                    // check for oppon rook
                     if (piece.Color != king.Color && (piece.Type == PieceType.Rook))
                     {
                         return true;
                     }
 
-                    // Stop if there is any other piece in the way
+                    // if theres a piece in the way
                     if (!piece.IsEmpty)
                     {
                         break;
@@ -727,7 +672,7 @@ namespace FinalProject
             int pawnDirection = king.IsWhite ? -1 : 1;// white up, black down;
             int[] pawnCols = { -1, 1 }; // pawn attack diagonally
 
-            foreach(var dc in pawnCols) //dc is the possible pawn locations
+            foreach (var dc in pawnCols) //dc is the possible pawn locations
             {
                 int row = king.Position.Row + pawnDirection;
                 int col = king.Position.Col + dc;
@@ -776,13 +721,13 @@ namespace FinalProject
                         Square possibleBishop = new Square(row, col);
                         Piece piece = board.GetPiece(possibleBishop);
 
-                        // Check if it's an opponent's bishop
+                        // check for opp bishop
                         if (piece.Color != king.Color && piece.Type == PieceType.Bishop)
                         {
                             return true;
                         }
 
-                        // Stop if there is any other piece in the way
+                        //if theres a piece in the way
                         if (!piece.IsEmpty)
                         {
                             break;
@@ -840,135 +785,9 @@ namespace FinalProject
 
         }
 
-        
-
-        public bool IsInCheck(Piece piece)
-        {
-            King king = LocateKing(piece);
 
 
-            //logic if in check return true;
-
-            //didnt add the is valid position
-
-            //checking for each attack:
-
-            return (IsPawnThreat(king) || IsKnightThreat(king) || IsBishopThreat(king) || IsRookThreat(king));
-        }
-
-        public bool IsCheckmate()
-        {
-            //locate current king
-            King king = !isWhiteTurn ? board.whiteKing : board.blackKing;
-
-
-            Console.WriteLine($"Checking checkmate for {(isWhiteTurn ? "White" : "Black")} king");
-
-            //check if king is in check
-            if (!IsInCheck(king))
-            {
-                Console.WriteLine("Not in Check");
-                return false;
-            }
-            Console.WriteLine("King is in check");
-
-
-
-            //king can avoid checkmate
-            if (CanAvoidCheckmate(king))
-            {
-                Console.WriteLine("King can move to safety");
-                return false;
-            }
-            Console.WriteLine("King cannot avoid check");
-
-
-            if (CanOtherPieceDefend(king))
-            {
-                Console.WriteLine("Another Piece can defend the king");
-                return false;
-            }
-            Console.WriteLine("No piece can defend, its checkmate!");
-
-            
-           
-
-
-            return true;
-        }
-
-        //todo : i think we can get much more efficient than 4 nested loops by using another DSA, should check that if we have time
-        public bool CanOtherPieceDefend(King king)
-        {
-            //get the friendly pieces
-            
-            for(int row = 0; row < Board.Rows; row++)
-            {
-                for(int col = 0; col < Board.Columns; col++)
-                {
-                    Piece defendingPiece = board.GetPiece(new Square(row, col));
-
-
-                    //if friendly (and not empty/king too)
-                    if(!defendingPiece.IsEmpty && defendingPiece.Color == king.Color && defendingPiece.Type != PieceType.King)
-                    {
-
-                        //try every possible square on the board
-                        for(int targetRow = 0; targetRow < Board.Rows; targetRow++)
-                        {
-                            for(int targetCol = 0; targetCol < Board.Columns; targetCol++)
-                            {
-                                Square targetSquare = new Square(targetRow, targetCol);
-                                Piece targetPiece = board.GetPiece(targetSquare);
-
-
-                                //if the move it valid
-                                if (defendingPiece.IsValidMove(defendingPiece.Position, targetSquare, board))
-                                {
-                                    // Store original positions and pieces
-                                    Square defenderOriginalPos = defendingPiece.Position;
-                                    Piece targetOriginalPiece = targetPiece;
-
-                                    // Make the move/capture
-                                    board.SetPiece(targetSquare, defendingPiece);
-                                    board.SetPiece(defenderOriginalPos, new EmptyPiece(defenderOriginalPos));
-
-                                    // Check if this move prevents check
-                                    bool stillInCheck = IsInCheck(king);
-
-                                    // Restore the original board state
-                                    board.SetPiece(defenderOriginalPos, defendingPiece);
-                                    board.SetPiece(targetSquare, targetOriginalPiece);
-
-                                    // If we found a defending move
-                                    if (!stillInCheck)
-                                    {
-                                        Console.WriteLine($"Defense found: {defendingPiece.Type} can " +
-                                            (targetOriginalPiece.IsEmpty ? "move to" : "capture at") +
-                                            $" {targetRow},{targetCol}");
-                                        return true;
-                                    }
-
-
-
-                                }
-
-
-
-                            }
-                        }
-
-                    }
-
-
-                }
-            }
-            Console.WriteLine("No defensive moves or captures found");
-            return false;
-        }
-
-
-
+        //overall functions ( for easier coding for me):
 
         public King LocateKing(Piece piece)
         {
@@ -982,6 +801,10 @@ namespace FinalProject
             }
         }
 
+        public bool ValidTurn(Piece piece)
+        {
+            return piece.IsWhite == isWhiteTurn;
+        }
 
         private void SwitchTurn()
         {
@@ -994,23 +817,70 @@ namespace FinalProject
         }
 
 
-        
+
+        //game ending and all of its things
 
 
-        public bool ValidTurn(Piece piece)
+        private async void EndGame()
         {
-            return piece.IsWhite == isWhiteTurn;
+            gameTimer.Stop();
+            isFirstMove = true; //reset the first game for the timer in first move (for future upgrades and game restarting)
+            updateUI(board, isWhiteTurn, timeLeft, false);
+
+
+            //num games incrementing
+            await IncGames();
+
+
+            //maybe opening the web - in future upgrades
+
+
+            Application.Exit();
         }
 
-        //valid move
+
+        private async Task IncGames()
+        {
+            int id = Convert.ToInt32(Program.player.UserId);
+            string path = $"api/TblChessPlayers/incGames/{id}";
+            try
+            {
+                // Add empty content (for PUT)
+                var emptyContent = new StringContent("", Encoding.UTF8, "application/json");
+
+                var response = await Program.client.PutAsync(path, emptyContent);
+
+                // Read response content 
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonConvert.DeserializeObject<GameUpdateResponse>(responseContent);
+                    Program.player.NumOfGames = result.currentGames;
+
+                }
+                else
+                {
+                    string message = $"Failed to update games(inc). Status: {response.StatusCode}. Message: {responseContent}";
+                    MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Exception: {ex.Message}");
+            }
+        }
 
 
 
+        //for the inc games
 
-
-       
-
-
+        public class GameUpdateResponse
+        {
+            public string message { get; set; }
+            public int currentGames { get; set; }
+        }
 
     }
 }

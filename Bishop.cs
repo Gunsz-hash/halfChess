@@ -37,6 +37,8 @@ namespace FinalProject
 
 
 
+        //for future changes:
+
 
 
         //this logic should be in the game, a recurssion to check if the path is cleared to the point i want to move to
