@@ -113,7 +113,7 @@ namespace FinalProject
                 {
                     Program.player = res.First();
                     this.Hide();
-                    new Menu().ShowDialog();
+                    new Menu(id).ShowDialog();
                 }
                 else
                 {

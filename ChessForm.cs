@@ -13,8 +13,9 @@ namespace FinalProject
   
     public partial class ChessForm : Form
     {
+        private Dictionary<Button, PieceAnimation> pieceAnimations = new Dictionary<Button, PieceAnimation>();
 
-        private Button[,] boardButtons;
+        public Button[,] boardButtons;
         private Game game;
         private Label turnLabel;
         private Label timerLabel;
@@ -257,6 +258,7 @@ namespace FinalProject
                     };
 
                     boardButtons[row, col].Click += Square_Click;
+                    pieceAnimations[boardButtons[row, col]] = new PieceAnimation(boardButtons[row, col]);
                     boardPanel.Controls.Add(boardButtons[row, col]);
                 }
             }
@@ -268,6 +270,16 @@ namespace FinalProject
             UpdateBoardUI(game.board, true, 20, false); // Initial board update
             //todo, super important UpdateBoardDisplay();
 
+        }
+
+
+        public void AnimatePieceMove(Square start, Square end, Action onComplete = null)
+        {
+            Button startButton = boardButtons[start.Row, start.Col];
+            Point startPos = startButton.Location;
+            Point endPos = boardButtons[end.Row, end.Col].Location;
+
+            pieceAnimations[startButton].AnimateMove(startPos, endPos, onComplete);
         }
 
         public void UpdateBoardUI(Board board, bool isWhiteTurn, int timeLeft, bool isCheck)

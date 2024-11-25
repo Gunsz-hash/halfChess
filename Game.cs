@@ -33,6 +33,15 @@ namespace FinalProject
         private bool isFirstMove;
 
 
+
+        private Timer animationTimer;
+        private int animationSteps = 0;
+        private Square animationStart;
+        private Square animationEnd;
+        private Point startPos;
+        private Point endPos;
+
+
         //@
 
 
@@ -423,13 +432,121 @@ namespace FinalProject
         }
 
 
+
+
+
+
+
+
+
         public void Capture(Square start, Square end)
         {
-            // Just use SetPiece to handle the capture
+            // Store pieces and do the capture first
             Piece movingPiece = board.GetPiece(start);
             board.SetPiece(end, movingPiece);  // Place capturing piece
             board.SetPiece(start, new EmptyPiece(start));  // Empty original sqr
+
+            // Get the button positions for animation
+            Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
+            Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
+            startPos = startButton.Location;
+            endPos = endButton.Location;
+
+            // Create and start animation timer
+            animationTimer = new Timer();
+            animationTimer.Interval = 20;
+            animationSteps = 0;
+            animationTimer.Tick += (sender, e) => {
+                animationSteps++;
+
+                if (animationSteps <= 15)
+                {
+                    double progress = (double)animationSteps / 15;
+                    int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
+                    int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+
+                    startButton.Location = new Point(newX, newY);
+                }
+                else
+                {
+                    // Animation complete
+                    animationTimer.Stop();
+                    startButton.Location = startPos; // Reset button position
+                    updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+                }
+            };
+
+            animationTimer.Start();
         }
+
+
+
+
+
+
+
+
+
+
+        //public void Capture(Square start, Square end)
+        //{
+        //    // Store the moving piece
+        //    Piece movingPiece = board.GetPiece(start);
+
+        //    // Setup animation
+        //    animationStart = start;
+        //    animationEnd = end;
+        //    animationSteps = 0;
+
+        //    // Get the button positions
+        //    Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
+        //    Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
+        //    startPos = startButton.Location;
+        //    endPos = endButton.Location;
+
+        //    // Create and start animation timer
+        //    animationTimer = new Timer();
+        //    animationTimer.Interval = 20;
+        //    animationTimer.Tick += (sender, e) => {
+        //        animationSteps++;
+
+        //        if (animationSteps <= 15)
+        //        {
+        //            double progress = (double)animationSteps / 15;
+        //            int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
+        //            int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+
+        //            startButton.Location = new Point(newX, newY);
+        //        }
+        //        else
+        //        {
+        //            // Animation complete
+        //            animationTimer.Stop();
+        //            startButton.Location = startPos; // Reset button position
+
+        //            // Actually capture the piece
+        //            board.SetPiece(end, movingPiece);
+        //            board.SetPiece(start, new EmptyPiece(start));
+        //            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+        //        }
+        //    };
+
+        //    animationTimer.Start();
+        //}
+
+
+
+
+
+
+
+        //public void Capture(Square start, Square end)
+        //{
+        //    // Just use SetPiece to handle the capture
+        //    Piece movingPiece = board.GetPiece(start);
+        //    board.SetPiece(end, movingPiece);  // Place capturing piece
+        //    board.SetPiece(start, new EmptyPiece(start));  // Empty original sqr
+        //}
 
         public bool CanAvoidCheckByCapture(Square start, Square end)
         {
@@ -461,13 +578,117 @@ namespace FinalProject
             return avoided;
         }
 
+
+
+
+
+
+
         public void Move(Square start, Square end)
         {
+            // Store original piece and do the move first
             Piece OriginalStartPiece = board.GetPiece(start);
-
             board.SetPiece(end, OriginalStartPiece);
             board.SetPiece(start, new EmptyPiece(null));
+
+            // Get the button positions for animation
+            Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
+            Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
+            startPos = startButton.Location;
+            endPos = endButton.Location;
+
+            // Create and start animation timer
+            animationTimer = new Timer();
+            animationTimer.Interval = 20;
+            animationSteps = 0;
+            animationTimer.Tick += (sender, e) => {
+                animationSteps++;
+
+                if (animationSteps <= 15)
+                {
+                    double progress = (double)animationSteps / 15;
+                    int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
+                    int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+
+                    startButton.Location = new Point(newX, newY);
+                }
+                else
+                {
+                    // Animation complete
+                    animationTimer.Stop();
+                    startButton.Location = startPos; // Reset button position
+                    updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+                }
+            };
+
+            animationTimer.Start();
         }
+
+
+
+
+
+
+        //public void Move(Square start, Square end)
+        //{
+        //    // Store the original piece
+        //    Piece originalStartPiece = board.GetPiece(start);
+
+        //    // Setup animation
+        //    animationStart = start;
+        //    animationEnd = end;
+        //    animationSteps = 0;
+
+        //    // Get the button positions
+        //    Button startButton = ((ChessForm)Form.ActiveForm).boardButtons[start.Row, start.Col];
+        //    Button endButton = ((ChessForm)Form.ActiveForm).boardButtons[end.Row, end.Col];
+        //    startPos = startButton.Location;
+        //    endPos = endButton.Location;
+
+        //    // Create and start animation timer
+        //    animationTimer = new Timer();
+        //    animationTimer.Interval = 20; // 20ms between frames
+        //    animationTimer.Tick += (sender, e) => {
+        //        animationSteps++;
+
+        //        if (animationSteps <= 15) // 15 steps total
+        //        {
+        //            // Calculate new position
+        //            double progress = (double)animationSteps / 15;
+        //            int newX = startPos.X + (int)((endPos.X - startPos.X) * progress);
+        //            int newY = startPos.Y + (int)((endPos.Y - startPos.Y) * progress);
+
+        //            startButton.Location = new Point(newX, newY);
+        //        }
+        //        else
+        //        {
+        //            // Animation complete
+        //            animationTimer.Stop();
+        //            startButton.Location = startPos; // Reset button position
+
+        //            // Actually move the piece
+        //            board.SetPiece(end, originalStartPiece);
+        //            board.SetPiece(start, new EmptyPiece(null));
+        //            updateUI(board, isWhiteTurn, timeLeft, IsInCheck(isWhiteTurn ? board.whiteKing : board.blackKing));
+        //        }
+        //    };
+
+        //    animationTimer.Start();
+        //}
+
+
+
+
+
+
+
+        //public void Move(Square start, Square end)
+        //{
+        //    Piece OriginalStartPiece = board.GetPiece(start);
+
+        //    board.SetPiece(end, OriginalStartPiece);
+        //    board.SetPiece(start, new EmptyPiece(null));
+        //}
 
 
         public bool IsRookThreat(King king)
