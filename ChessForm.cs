@@ -13,8 +13,9 @@ namespace FinalProject
   
     public partial class ChessForm : Form
     {
+        private Dictionary<Button, PieceAnimation> pieceAnimations = new Dictionary<Button, PieceAnimation>();
 
-        private Button[,] boardButtons;
+        public Button[,] boardButtons;
         private Game game;
         private Label turnLabel;
         private Label timerLabel;
@@ -25,27 +26,45 @@ namespace FinalProject
         private Panel boardPanel;
 
 
+        //size
+        int width;
+        int height;
+
+
+
         //flashing red chess:
         private Timer checkFlashTimer;
         private bool isFlashing;
         private Square checkSquare;
 
+
+        //drawing
+        private Bitmap bitmap;
+        private int x = -100;
+        private int y = -100;
+       
         
+
+
+
+        //end of drawing (not working)
 
         public ChessForm()
         {
             InitializeComponent();
 
-            int width = (BUTTON_SIZE*4) + (BOARD_MARGIN*2) + 150;
-            int height = (BUTTON_SIZE * 8) + (BOARD_MARGIN * 3) + 60;
+            width = (BUTTON_SIZE*4) + (BOARD_MARGIN*2) + 150;
+            height = (BUTTON_SIZE * 8) + (BOARD_MARGIN * 3) + 60;
 
             this.Size = new Size(width, height);
-            this.MinimumSize = this.Size;
+            this.MinimumSize = this.Size; 
 
             this.Size = new Size(BUTTON_SIZE * 6, BUTTON_SIZE * 9);
             InitializeComponents();
 
             InitializeCheckFlashTimer();
+
+           
 
         }
 
@@ -92,7 +111,7 @@ namespace FinalProject
             };
             this.Controls.Add(timerLabel);
 
-            boardPanel = new Panel  // Store the panel reference
+            boardPanel = new Panel  // store the panel ref
             {
                 Location = new Point(BOARD_MARGIN, BOARD_MARGIN + 40),
                 Size = new Size(BUTTON_SIZE * 4, BUTTON_SIZE * 8),
@@ -100,10 +119,70 @@ namespace FinalProject
             };
             this.Controls.Add(boardPanel);
 
+            Button clearDrawingsButton = new Button
+            {
+                Text = "Clear Drawings",
+                Location = new Point(BOARD_MARGIN + 280, BOARD_MARGIN + 200),
+                Size = new Size(100, 30)
+            };
+            clearDrawingsButton.Click += (s, e) => ClearDrawings();
+            this.Controls.Add(clearDrawingsButton);
 
             InitializeBoard();
 
         }
+
+
+        //drawing - not working yet!!!!!!!!!!!!!!!!
+
+
+        private void LoadDrawing(Object sender, EventArgs e)
+        {
+              bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+
+        }
+
+        private void ChessForm_Paint(object sender, PaintEventArgs e)
+        {
+            this.DoubleBuffered = true;
+            const int SIZE = 10;
+            Graphics g = Graphics.FromImage(bitmap);
+            g.FillEllipse(Brushes.Red, x -SIZE/2, y-SIZE/2, SIZE, SIZE);
+            e.Graphics.DrawImage(bitmap, 0,0);
+
+
+            g.Dispose();
+        }
+
+        private void ChessForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(e.Button == MouseButtons.Right)
+            {
+                x = e.X;
+                y = e.Y;
+                this.Invalidate();
+                this.Update();
+            }
+        }
+
+
+        public void ClearDrawings()
+        {
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                g.Clear(Color.Transparent);
+            }
+            boardPanel.Refresh();
+        }
+
+
+
+        //end of drawing
+
+
+
+
+
 
 
 
@@ -177,6 +256,7 @@ namespace FinalProject
                     };
 
                     boardButtons[row, col].Click += Square_Click;
+                    pieceAnimations[boardButtons[row, col]] = new PieceAnimation(boardButtons[row, col]);
                     boardPanel.Controls.Add(boardButtons[row, col]);
                 }
             }
@@ -188,6 +268,18 @@ namespace FinalProject
             UpdateBoardUI(game.board, true, 20, false); // Initial board update
             //todo, super important UpdateBoardDisplay();
 
+        }
+
+
+
+        //not in use because we got confused -  we need to fix it for future upgrades
+        public void AnimatePieceMove(Square start, Square end, Action onComplete = null)
+        {
+            Button startButton = boardButtons[start.Row, start.Col];
+            Point startPos = startButton.Location;
+            Point endPos = boardButtons[end.Row, end.Col].Location;
+
+            pieceAnimations[startButton].AnimateMove(startPos, endPos, onComplete);
         }
 
         public void UpdateBoardUI(Board board, bool isWhiteTurn, int timeLeft, bool isCheck)
@@ -209,13 +301,13 @@ namespace FinalProject
 
             try
             {
-                // Update timer
+                // update timer
                 timerLabel.Text = $"Time: {timeLeft}";
 
-                // Update turn label
+                // Update turn
                 turnLabel.Text = $"Turn: {(isWhiteTurn ? "White" : "Black")}";
 
-                // Update pieces
+                // update the pieces
                 for (int row = 0; row < Board.Rows; row++)
                 {
                     for (int col = 0; col < Board.Columns; col++)
@@ -234,7 +326,7 @@ namespace FinalProject
                     }
                 }
 
-                // If in check, highlight the king
+                // if in check, highlight the king
                 if (isCheck)
                 {
                     King kingInCheck = isWhiteTurn ? board.whiteKing : board.blackKing;
@@ -278,6 +370,7 @@ namespace FinalProject
         }
 
 
+        //override it ( read online) - and stop the flashing timer (not in use)
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             if (checkFlashTimer != null)
@@ -291,7 +384,7 @@ namespace FinalProject
 
         public void HighlightSquare(Square position, Color color)
         {
-            // Ensure position is valid
+            // if position valid
             if (position.Row >= 0 && position.Row < Board.Rows &&
                 position.Col >= 0 && position.Col < Board.Columns)
             {
@@ -300,7 +393,7 @@ namespace FinalProject
         }
 
 
-        // Method to show valid moves by highlighting them
+        // Method to show valid moves by highlighting them - for future upgrades / ignore that arnon :D
         public void ShowValidMoves(List<Square> validMoves)
         {
             foreach (Square move in validMoves)
@@ -339,9 +432,6 @@ namespace FinalProject
             }
         }
 
-
-       
-
         private string GetPieceSymbol(Piece piece)
         {
             if (piece == null || piece.IsEmpty) return "";
@@ -357,5 +447,6 @@ namespace FinalProject
             }
         }
 
+       
     }
 }

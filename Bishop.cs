@@ -33,34 +33,11 @@ namespace FinalProject
 
 
 
-            /*for (int times = 0; times < rowDiffernce; times++)
-            {
-                if(endPoint.Row < startPoint.Row) //up
-                {
-                    if (endPoint.Col < startPoint.Col)//left
-                    {
-
-                    }
-                    else//right
-                    {
-
-                    }
-                }
-                else // down
-                {
-                    if (endPoint.Col > startPoint.Col)// right
-                    {
-
-                    }
-                    else//left
-                    {
-
-                    }
-                }
-            }*/
         }
 
 
+
+        //for future changes:
 
 
 

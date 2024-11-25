@@ -20,8 +20,7 @@ namespace FinalProject
         {
             Color = color;
             Type = type;
-            //if(position.InBounds()
-            //throw if not;
+            
             Position = position;
         }
 
@@ -37,9 +36,7 @@ namespace FinalProject
 
         public void SetPosition(Square newPosition)
         {
-            //if(!newPosition.InBounds) todo fix inbound - if not, throw 
             
-            //add else clause later;
             Position = newPosition;
 
         }

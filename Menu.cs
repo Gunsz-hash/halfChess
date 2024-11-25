@@ -1,9 +1,11 @@
-﻿using System;
+﻿using FinalProject.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,17 +15,17 @@ namespace FinalProject
     public partial class Menu : Form
     {
 
-        private const string PATH = "api/TblChessPlayers";
+       // private const string PATH = "api/TblChessPlayers"; for checking, currently we get the path from the "caller"
 
-        public Menu()
+        public Menu(int id)
         {
             InitializeComponent();
+            InitPlayerValues(id);
         }
 
         private void Menu_Load(object sender, EventArgs e)
         {
-/*            Labels_Load(); // player name / data
-*/
+            //nothing here, keeping it for future upgrades of the code
         }
 
         private void Play_Click(object sender, EventArgs e)
@@ -46,5 +48,19 @@ namespace FinalProject
         {
             Application.Exit();
         }
+
+
+        private async Task<Player> GetPlayerAsync(string path)
+        {
+            HttpResponseMessage response = await Program.client.GetAsync($"{path}");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<Player>();
+            }
+            return null;
+        }
+
+       
     }
 }
+

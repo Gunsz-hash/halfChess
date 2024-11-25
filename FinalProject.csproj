@@ -92,6 +92,7 @@
     <Compile Include="Models\Player.cs" />
     <Compile Include="Pawn.cs" />
     <Compile Include="Piece.cs" />
+    <Compile Include="PieceAnimation.cs" />
     <Compile Include="Square.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -102,6 +103,9 @@
     <Compile Include="WelcomeForm.Designer.cs">
       <DependentUpon>WelcomeForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="ChessForm.resx">
+      <DependentUpon>ChessForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menu.resx">
       <DependentUpon>Menu.cs</DependentUpon>
     </EmbeddedResource>

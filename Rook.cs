@@ -26,21 +26,6 @@ namespace FinalProject
         }
 
 
-        /*
-         
-        right : startPoint.col < endPoint.col ( row stays the same)
-        
-        left  : startPoint.col > endPoint.col ( row stays the same)
-         
-         
-        up : startPoint.row > endPoint.row ( cols stays the same)
-
-        down : startPoint.row < endPoint.row ( cols stays the same)
-         
-         // consider a piece blocking our rook
-         
-         
-         */
 
 
 

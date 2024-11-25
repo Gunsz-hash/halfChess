@@ -17,7 +17,7 @@ namespace FinalProject
 
 
         public Board(int rows, int cols)
-        {
+        {//for future use (for other sizes of boards)
             squares = new Piece[rows, cols];
             InitBoard();
         }
@@ -28,17 +28,7 @@ namespace FinalProject
 
         }
 
-        /*public IEnumerable<Piece> getPiecesByColor(bool isWhite)
-        {
-            List<Piece> playerPieces = new List<Piece>();
-            for(int row = 0; row <Rows; row++)
-            {
-                for(int col = 0; col < Columns; col++)
-                {
-                    Piece piece = piece
-                }
-            }
-        }*/
+        
 
         public bool IsPathClear(Square start, Square end, bool isDiagonal) //is diagonal used for the bishop problem
         {
@@ -71,7 +61,7 @@ namespace FinalProject
             int currentCol = start.Col + colStep;
 
 
-            // Check each square between start and end (exclusive)
+            // Check each square between start and end 
             while (currentRow != end.Row || currentCol != end.Col)
             {
                 if (!GetPiece(new Square(currentRow, currentCol)).IsEmpty)
@@ -84,7 +74,7 @@ namespace FinalProject
             return true;  // Path is clear
         }
 
-        public void InitBoard() //todo change all the hardcoded numbers to consts.
+        public void InitBoard() 
         {
 
 
@@ -138,7 +128,7 @@ namespace FinalProject
             if(InBounds(position))
             {
                 squares[position.Row, position.Col] = piece;
-                //if(piece != null)  // might be, todo
+                
                 piece.SetPosition(position);
             }
         }
@@ -158,64 +148,8 @@ namespace FinalProject
             return squares[position.Row, position.Col];
         }
 
-        /* public bool MovePiece(Square startPoint, Square endPoint)
-         { 
+        
 
-
-             Piece piece = GetPiece(startPoint);
-             if(!piece.IsEmpty && piece.IsValidMove(startPoint,endPoint,this) && MayMove(piece, endPoint))
-             {
-                 SetPiece(endPoint, piece);
-                 Piece emptyPiece = new EmptyPiece(startPoint);
-                 SetPiece(startPoint, emptyPiece);
-                 return true;
-             }
-
-             else if(!piece.IsEmpty && piece.IsValidMove(startPoint, endPoint, this) && !MayMove(piece, endPoint))
-             {
-                 // print some piece is blocking or friendly piece in endPoint
-                 return false;
-             }
-
-             else
-             {
-                 // print one condition of the above is false. add general note
-
-                 return false;
-             }
-         }*/
-
-        /*public bool MayMove(Piece piece, Square position)
-        {
-            // check if empty or friendly piece, or hostile piece, todo
-        }*/
-
-        //set piece for moving
-        /* public void SetPiece(Position newPosition, Piece piece) //todo object initializer
-         {
-             if(newPosition.InBounds(Rows, Columns))
-             {
-                 //copying the old pos
-                 Position oldPosition = new Position(piece.Position.Row, piece.Position.Col);
-
-                 //setting the new piece in the new location and changing its position
-                 squares[newPosition.Row, newPosition.Col] = piece;
-                 piece.SetPosition(newPosition);
-
-                 //set the old position on the board empty
-                 squares[oldPosition.Row, oldPosition.Col] = new EmptyPiece(oldPosition);
-
-
-
-                *//* //todo change it into a function, add a way to copy;
-                 Position temp = new Position(piece.Position.Row, piece.Position.Col);
-                 Piece piece1 = new Piece();
-
-                 squares[position.Row, position.Col] = piece;
-                 squares[temp.Row, temp.Col] = piece
-                 //might be a bug below, define rempty piece*//*
-
-             }
-         }*/
+        
     }
 }
