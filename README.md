@@ -23,6 +23,12 @@ A two-player Half-Chess application developed in C# using Windows Forms.
 - State Management
 - Move Validation
 
+## Related Project
+
+ChessSite Web Application:
+
+https://github.com/Gunsz-hash/ChessSite
+
 
 
 ## Project Type
